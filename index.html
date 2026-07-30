@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<!-- 991 手機整合查詢 v2-verified-20260729 -->
+<html lang="zh-Hant">
+<head>
+  <base target="_top">
+  <meta charset="UTF-8">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="container">
+    <div class="topbar">
+      <button
+        id="updateButton"
+        class="update-button"
+        type="button"
+        aria-label="查看各工作表更新時間"
+      >
+        <span id="latestTime">最新更新：讀取中</span>
+        <span id="updateState" class="status-line unknown">● 讀取中</span>
+      </button>
+    </div>
+
+    <section class="search-card">
+      <h1>台車／零件查詢</h1>
+      <p class="hint">輸入台車號或零件件號</p>
+      <form id="searchForm">
+        <div class="search-row">
+          <input
+            id="keyword"
+            class="keyword-input"
+            type="text"
+            inputmode="text"
+            autocomplete="off"
+            autocapitalize="characters"
+            spellcheck="false"
+            placeholder="例如：台車號、9098113046"
+          >
+          <button
+            id="searchButton"
+            class="search-button"
+            type="submit"
+          >查詢</button>
+        </div>
+      </form>
+      <div id="message" class="message" role="status"></div>
+    </section>
+
+    <section id="result" class="result"></section>
+  </main>
+
+  <div id="updateModal" class="modal" aria-hidden="true">
+    <div class="modal-card">
+      <h2 class="modal-title">各工作表更新時間</h2>
+      <div id="updateDetails"></div>
+      <button id="modalClose" class="modal-close" type="button">關閉</button>
+    </div>
+  </div>
+
+  <script src="app.js" defer></script>
+</body>
+</html>
