@@ -372,11 +372,9 @@ function renderPartView() {
     `${formatNumber(abnormalCell.storageCount)} 個儲位，共缺 ${formatNumber(abnormalCell.quantity)} pcs`,
     true
   );
-  html += abnormalGroupsDetails(
-    pickAbnormal.groups || [],
-    '倉缺明細',
-    `${formatNumber(pickAbnormal.labelCount)} 張貼紙，共缺 ${formatNumber(pickAbnormal.quantity)} pcs`,
-    false
+  html += pickAbnormalDetails(
+    pickAbnormal.details || [],
+    `${formatNumber(pickAbnormal.labelCount)} 張貼紙，共缺 ${formatNumber(pickAbnormal.quantity)} pcs`
   );
   result.innerHTML = html;
 }
@@ -432,6 +430,36 @@ function suspenseDetails(items, title, subtitle) {
     });
   }
   return detailsBlock(title, subtitle, body);
+}
+
+function pickAbnormalDetails(items, subtitle) {
+  let body = '';
+
+  if (!items.length) {
+    body = '<div class="empty">沒有倉缺資料</div>';
+  } else {
+    items.forEach(function(item, index) {
+      body += `
+        <article class="detail-card">
+          <h4 class="detail-title">
+            貼紙 ${index + 1}
+          </h4>
+
+          ${infoList([
+            ['索引碼', item.indexKey || '無'],
+            ['據點', item.strongholdId || '無'],
+            ['數量', `${formatNumber(item.quantity)} pcs`]
+          ])}
+        </article>
+      `;
+    });
+  }
+
+  return detailsBlock(
+    '倉缺明細',
+    subtitle,
+    body
+  );
 }
 
 function abnormalGroupsDetails(
