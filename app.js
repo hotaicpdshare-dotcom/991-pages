@@ -348,12 +348,12 @@ function renderPartView() {
     <section class="panel">
       <h3 class="panel-title">庫存與作業摘要</h3>
       <div class="metric-grid">
+        ${metric('異常區', abnormalAreaMetricText(abnormalArea), 'orange', true)}
         ${metric('HOPES OH', `${formatNumber(hopes.oh)} pcs`, 'blue')}
         ${metric('WES OH', `${formatNumber(wes.oh)} pcs`, 'green')}
         ${metric('未上架', `${formatNumber(openCase.count)} 點`, 'orange')}
         ${metric('剩餘封箱', `${formatNumber(clo.remaining)} pcs`, 'blue')}
         ${metric('暫存總數', `${formatNumber(suspense.quantity)} pcs`, 'orange')}
-        ${metric('異常區', abnormalAreaMetricText(abnormalArea), 'orange', true)}
         ${metric('WES 儲位', `${formatNumber(wes.storageCount)} 個`, 'green')}
         ${metric('儲位缺', `${formatNumber(abnormalCell.storageCount)} 個`, 'red')}
         ${metric('儲位缺 PCS', `${formatNumber(abnormalCell.quantity)} pcs`, 'red')}
