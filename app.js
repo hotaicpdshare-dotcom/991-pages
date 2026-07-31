@@ -191,6 +191,19 @@ function buildNotFoundResult(keyword, normalized) {
         quantity: 0,
         groups: []
       },
+      abnormalArea: {
+        selectedProductType: '',
+        matchMode: 'part_only',
+        confirmedQuantity: 0,
+        possibleQuantity: 0,
+        totalQuantity: 0,
+        confirmedCaseCount: 0,
+        possibleCaseCount: 0,
+        caseCount: 0,
+        locations: [],
+        details: [],
+        otherProductTypes: []
+      },
       variants: []
     },
     updateStatus: state.updateStatus
@@ -301,6 +314,7 @@ function renderPartView() {
   const suspense = selected.suspense || {};
   const abnormalCell = selected.abnormalCell || {};
   const pickAbnormal = selected.pickAbnormal || {};
+  const abnormalArea = selected.abnormalArea || {};
   const variantButtons = variants.length > 1
     ? `
       <nav class="variant-strip" aria-label="選擇商品別">
@@ -339,6 +353,7 @@ function renderPartView() {
         ${metric('未上架', `${formatNumber(openCase.count)} 點`, 'orange')}
         ${metric('剩餘封箱', `${formatNumber(clo.remaining)} pcs`, 'blue')}
         ${metric('暫存總數', `${formatNumber(suspense.quantity)} pcs`, 'orange')}
+        ${metric('異常區', abnormalAreaMetricText(abnormalArea), 'orange', true)}
         ${metric('WES 儲位', `${formatNumber(wes.storageCount)} 個`, 'green')}
         ${metric('儲位缺', `${formatNumber(abnormalCell.storageCount)} 個`, 'red')}
         ${metric('儲位缺 PCS', `${formatNumber(abnormalCell.quantity)} pcs`, 'red')}
@@ -347,6 +362,7 @@ function renderPartView() {
       </div>
     </section>
 
+    ${abnormalAreaOverview(abnormalArea)}
     <section class="panel">
       <h3 class="panel-title">零件位置與尺寸</h3>
       ${infoList([
@@ -366,6 +382,7 @@ function renderPartView() {
     `${formatNumber(openCase.count)} 點未上架零件`,
     `合計 ${formatNumber(openCase.quantity)} pcs`
   );
+  html += abnormalAreaDetails(abnormalArea);
   html += abnormalGroupsDetails(
     abnormalCell.groups || [],
     '儲位缺明細',
@@ -377,6 +394,149 @@ function renderPartView() {
     `${formatNumber(pickAbnormal.labelCount)} 張貼紙，共缺 ${formatNumber(pickAbnormal.quantity)} pcs`
   );
   result.innerHTML = html;
+}
+
+function abnormalAreaMetricText(area) {
+  const confirmed = Number(area.confirmedQuantity || 0);
+  const possible = Number(area.possibleQuantity || 0);
+  if (confirmed <= 0 && possible <= 0) {
+    return '0 pcs';
+  }
+  if (confirmed > 0 && possible > 0) {
+    return `${formatNumber(confirmed)} pcs＋可能 ${formatNumber(possible)} pcs`;
+  }
+  if (confirmed > 0) {
+    return `${formatNumber(confirmed)} pcs`;
+  }
+  return `可能 ${formatNumber(possible)} pcs`;
+}
+
+function abnormalAreaOverview(area) {
+  const total = Number(area.totalQuantity || 0);
+  const possible = Number(area.possibleQuantity || 0);
+  const confirmed = Number(area.confirmedQuantity || 0);
+  const locations = area.locations || [];
+  const otherTypes = area.otherProductTypes || [];
+
+  if (total <= 0 && !otherTypes.length) {
+    return '';
+  }
+
+  const confirmedLabel = area.matchMode === 'product_type'
+    ? '商品別一致'
+    : '有商品別資料';
+
+  let locationHtml = '';
+  if (!locations.length) {
+    locationHtml = '<div class="empty">本商品別沒有符合的異常區資料</div>';
+  } else {
+    locationHtml = `
+      <div class="abnormal-location-list">
+        ${locations.map(function(item) {
+          const itemConfirmed = Number(item.confirmedQuantity || 0);
+          const itemPossible = Number(item.possibleQuantity || 0);
+          const layerText = item.layer && item.layer !== '未填'
+            ? item.layer + '層'
+            : '層別未填';
+          return `
+            <article class="abnormal-location-card">
+              <div class="abnormal-location-head">
+                <strong>${escapeHtml(item.floor || '未填')}・${escapeHtml(layerText)}</strong>
+                <span>${escapeHtml(formatNumber(item.totalQuantity))} pcs</span>
+              </div>
+              <div class="abnormal-location-meta">
+                ${itemConfirmed > 0
+                  ? `<span>${escapeHtml(confirmedLabel)} ${escapeHtml(formatNumber(itemConfirmed))}</span>`
+                  : ''}
+                ${itemPossible > 0
+                  ? `<span class="possible">可能符合 ${escapeHtml(formatNumber(itemPossible))}</span>`
+                  : ''}
+                <span>${escapeHtml(formatNumber(item.caseCount))} 件案件</span>
+              </div>
+            </article>
+          `;
+        }).join('')}
+      </div>
+    `;
+  }
+
+  const possibleNote = possible > 0
+    ? `
+      <div class="abnormal-possible-note">
+        其中 ${escapeHtml(formatNumber(possible))} pcs 沒有商品別，僅依零件件號比對，請到案件明細確認。
+      </div>
+    `
+    : '';
+
+  const otherTypeNote = otherTypes.length
+    ? `
+      <div class="abnormal-other-note">
+        另有其他商品別案件，未計入上方數量：
+        ${otherTypes.map(function(item) {
+          return `商品別 ${escapeHtml(item.productType || '未填')} ${escapeHtml(formatNumber(item.quantity))} pcs`;
+        }).join('、')}
+      </div>
+    `
+    : '';
+
+  return `
+    <section class="panel abnormal-area-panel">
+      <h3 class="panel-title">異常區位置</h3>
+      <div class="abnormal-total-line">
+        <span>異常區合計</span>
+        <strong>${escapeHtml(formatNumber(total))} pcs</strong>
+      </div>
+      ${locationHtml}
+      ${possibleNote}
+      ${otherTypeNote}
+    </section>
+  `;
+}
+
+function abnormalAreaDetails(area) {
+  const items = area.details || [];
+  if (!items.length) {
+    return '';
+  }
+
+  let body = '';
+  items.forEach(function(item) {
+    const matchLabel = item.matchType === 'possible'
+      ? '商品別未填，僅依件號比對'
+      : (area.matchMode === 'product_type'
+        ? '商品別一致'
+        : '有商品別資料');
+    const layerText = item.layer && item.layer !== '未填'
+      ? item.layer + '層'
+      : '層別未填';
+    body += `
+      <article class="detail-card abnormal-detail-card">
+        <h4 class="detail-title">
+          ${escapeHtml(item.floor || '未填')}・${escapeHtml(layerText)}　${escapeHtml(formatNumber(item.quantity))} pcs
+        </h4>
+        ${infoList([
+          ['案件編號', item.caseNo || '無'],
+          ['比對方式', matchLabel],
+          ['商品別', item.productType || '未填'],
+          ['異常情況', item.situation || '無'],
+          ['原台車', item.originalCart || '無'],
+          ['處理階段', item.stage || '無'],
+          ['最終處理', item.finalResolution || '尚未決定'],
+          ['上架狀態', item.shelvingStatus || '無'],
+          ['最後更新', item.updatedAt || '無']
+        ])}
+      </article>
+    `;
+  });
+
+  const possibleText = Number(area.possibleQuantity || 0) > 0
+    ? `；其中 ${formatNumber(area.possibleQuantity)} pcs 僅依件號比對`
+    : '';
+  return detailsBlock(
+    '異常區案件明細',
+    `共 ${formatNumber(area.caseCount)} 件、${formatNumber(area.totalQuantity)} pcs${possibleText}`,
+    body
+  );
 }
 
 function openCaseDetails(items, title, subtitle) {
@@ -513,15 +673,16 @@ function detailsBlock(title, subtitle, body) {
   `;
 }
 
-function metric(label, value, color) {
+function metric(label, value, color, wide) {
+  const colorClass = color === 'blue' ? '' : color;
+  const wideClass = wide ? ' wide' : '';
   return `
-    <div class="metric ${color === 'blue' ? '' : color}">
+    <div class="metric ${colorClass}${wideClass}">
       <div class="metric-label">${escapeHtml(label)}</div>
       <div class="metric-value">${escapeHtml(value)}</div>
     </div>
   `;
 }
-
 function infoList(rows) {
   return `
     <div class="info-list">
@@ -571,7 +732,7 @@ function openUpdateModal() {
     html += `
       <div class="warning-note">
         最新與最舊資料相差 ${escapeHtml(formatNumber(status.differenceHours))} 小時。
-        判斷標準為不超過 2 小時，且九張表皆有更新紀錄。
+        判斷標準為不超過 2 小時，且所有來源資料皆有更新紀錄。
       </div>
     `;
   }
