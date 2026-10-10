@@ -1,0 +1,693 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>三倉看板</title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<style>
+:root{
+  --bg:#f3f5f8;--panel:#fff;--ink:#17222d;--ink2:#3a4a59;--muted:#617283;--line:#e2e8ee;--line2:#edf1f5;--soft:#f7f9fb;
+  --brand:#941e34;--brandS:#fbeff2;--accent:#0b7285;--accentS:#e3f4f7;
+  --f2:#2563eb;--f3:#e8710a;--good:#12805c;--goodS:#e3f5ee;--bad:#c0362c;--badS:#fde9e7;--warn:#a56a2c;--warnS:#fdf1e0;
+  --shadow:0 1px 2px rgba(16,24,40,.05),0 2px 8px rgba(16,24,40,.04);
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Microsoft JhengHei UI","Microsoft JhengHei","PingFang TC",system-ui,Arial,sans-serif;font-size:16px;line-height:1.55;overflow-x:clip;-webkit-font-smoothing:antialiased}
+button,input,select{font:inherit;color:inherit}button{cursor:pointer}
+a{color:var(--accent);text-decoration:none;font-weight:700}a:hover{text-decoration:underline}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+/* ---------- 頂部 ---------- */
+header.top{position:sticky;top:0;z-index:30;height:64px;display:flex;align-items:center;gap:18px;padding:0 28px;background:var(--panel);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:12px;white-space:nowrap}
+.brand i{width:38px;height:38px;border-radius:10px;background:var(--brand);display:grid;place-items:center;color:#fff;font-style:normal;font-weight:800;font-size:19px}
+.brand b{display:block;font-size:18px;line-height:1.15}.brand span{font-size:12.5px;color:var(--muted)}
+.boards{display:flex;gap:6px;padding:5px;background:var(--soft);border:1px solid var(--line);border-radius:12px}
+.boards button{padding:8px 20px;border:0;border-radius:8px;background:transparent;font-weight:700;font-size:16px;color:var(--muted)}
+.boards button.on{background:var(--brand);color:#fff}
+.search{position:relative;flex:1;max-width:520px;margin-left:auto}
+.search input{width:100%;height:44px;padding:0 54px 0 42px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:16px}
+.search input::placeholder{color:#8c9aa8}
+.search:before{content:"";position:absolute;left:15px;top:14px;width:12px;height:12px;border:2px solid #8c9aa8;border-radius:50%}
+.search:after{content:"";position:absolute;left:28px;top:27px;width:7px;height:2px;background:#8c9aa8;transform:rotate(45deg)}
+.search kbd{position:absolute;right:10px;top:10px;padding:1px 9px;border:1px solid var(--line);border-radius:6px;color:var(--muted);font-size:13px;background:var(--soft)}
+.sugg{position:absolute;left:0;right:0;top:52px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.16);display:none;overflow:hidden}
+.sugg.on{display:block}.sugg button{display:flex;gap:12px;align-items:center;width:100%;padding:11px 16px;border:0;border-bottom:1px solid var(--line2);background:#fff;text-align:left;font-size:15.5px}
+.sugg button:hover{background:var(--soft)}
+.fresh{position:relative;display:flex;align-items:center;gap:8px;height:44px;padding:0 14px;border:1px solid var(--line);border-radius:12px;font-size:14.5px;color:var(--ink2);white-space:nowrap;background:#fff}
+.dot{width:9px;height:9px;border-radius:50%;background:var(--good)}
+.pop{position:absolute;right:0;top:52px;width:340px;padding:14px 16px;background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 32px rgba(0,0,0,.16);display:none;color:var(--ink);white-space:normal;z-index:40;font-size:14.5px}
+.fresh:hover .pop,.fresh:focus-within .pop{display:block}.pop table{width:100%;border-collapse:collapse}.pop td{padding:4px 0}.pop td:last-child{text-align:right;color:var(--muted)}
+/* ---------- 版型 ---------- */
+.shell{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:calc(100vh - 64px)}
+nav.side{position:sticky;top:64px;align-self:start;height:calc(100vh - 64px);padding:22px 14px;background:var(--panel);border-right:1px solid var(--line);overflow:auto}
+nav.side h4{margin:22px 14px 8px;font-size:13px;letter-spacing:.08em;color:var(--muted);font-weight:700}
+nav.side h4:first-child{margin-top:4px}
+nav.side a{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;color:var(--ink2);font-weight:600;font-size:16px;border-left:3px solid transparent}
+nav.side a:hover{background:var(--soft);text-decoration:none}
+nav.side a.on{background:var(--brandS);color:var(--brand);border-left-color:var(--brand);font-weight:700}
+nav.side a small{margin-left:auto;font-size:12.5px;padding:0 8px;border-radius:99px;background:var(--warnS);color:var(--warn)}
+main{min-width:0}.content{max-width:1480px;margin:0 auto;padding:30px 36px 72px}
+.ph{margin:0 0 6px}.ph h1{margin:0;font-size:30px;font-weight:800;letter-spacing:-.01em}.ph p{margin:4px 0 0;font-size:16px;color:var(--muted)}
+.mockbar{margin:14px 0 4px;padding:10px 16px;border-radius:10px;background:var(--warnS);color:var(--warn);font-size:14.5px}
+.sec{display:flex;align-items:baseline;gap:14px;margin:38px 0 16px;padding-bottom:10px;border-bottom:2px solid var(--line)}
+.sec h2{margin:0;font-size:21px;font-weight:800}.sec span{font-size:15px;color:var(--muted)}
+.grid{display:grid;gap:20px;align-items:stretch}.g2{grid-template-columns:repeat(2,minmax(0,1fr))}.g3{grid-template-columns:repeat(auto-fit,minmax(440px,1fr))}.g4{grid-template-columns:repeat(2,minmax(0,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:22px 24px;min-width:0;display:flex;flex-direction:column}
+.card-h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:0 0 14px}
+.card-h h3{margin:0;font-size:17px;font-weight:800;color:var(--ink)}.card-h>span{font-size:14.5px;color:var(--muted)}
+.tag{display:inline-block;padding:1px 9px;border-radius:99px;font-size:13px;font-weight:700;background:var(--warnS);color:var(--warn);margin-left:8px;vertical-align:1px}
+a.card,button.card{text-align:left;color:inherit;font-weight:400;width:100%}a.card:hover,button.card:hover{text-decoration:none;border-color:var(--accent)}
+/* 2F | 3F 對齊欄位 */
+.cols{display:grid;grid-template-columns:minmax(150px,1fr) minmax(150px,1fr);column-gap:28px}
+.col{min-width:0}
+.pill{display:inline-block;min-width:38px;padding:1px 10px;border-radius:99px;font-size:14px;font-weight:800;color:#fff;text-align:center}
+.pill.f2{background:var(--f2)}.pill.f3{background:var(--f3)}.pill.all{background:var(--ink2)}
+.big{margin:8px 0 0;font-size:38px;line-height:1.1;font-weight:800;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.big small{font-size:15px;font-weight:600;color:var(--muted);margin-left:5px;letter-spacing:0}
+.ln{display:flex;justify-content:space-between;gap:8px;padding:7px 0;border-top:1px solid var(--line2);font-size:15.5px;color:var(--ink2);white-space:nowrap}
+.ln:first-of-type{margin-top:14px}.ln b{color:var(--ink);font-variant-numeric:tabular-nums}
+.d{font-size:13.5px;font-weight:700;margin-left:5px}.d.up{color:var(--bad)}.d.down{color:var(--good)}.d.eq{color:var(--muted)}
+/* KPI 表（標籤 | 2F | 3F） */
+.kpi{display:grid;grid-template-columns:minmax(150px,1fr) 96px 96px;column-gap:10px;align-items:center}
+.kpi .h{font-size:14px;color:var(--muted);font-weight:700;padding:0 0 10px;border-bottom:1px solid var(--line)}
+.kpi .h.r,.kpi .v{text-align:right}
+.kpi .l{white-space:nowrap;padding:14px 0;border-bottom:1px solid var(--line2);font-size:15.5px;color:var(--ink2)}
+.kpi .v{padding:14px 0;border-bottom:1px solid var(--line2);font-size:19px;font-weight:800;font-variant-numeric:tabular-nums}
+.kpi .v.span{grid-column:span 2;font-size:17px}.kpi .v.bad{color:var(--bad)}
+.kpi .l:nth-last-child(-n+3),.kpi .v:nth-last-child(-n+2){border-bottom:0}
+.foot{margin-top:auto;padding-top:14px;font-size:14.5px;color:var(--muted)}
+/* 控制列 */
+.tools{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:0 0 18px}.tools .sp{flex:1}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.seg button{padding:8px 16px;border:0;background:transparent;font-weight:700;color:var(--muted);font-size:15px}.seg button+button{border-left:1px solid var(--line)}.seg button.on{background:var(--accent);color:#fff}
+.cc-btns .btn{height:34px;padding:0 11px;font-size:14px}.btn{height:36px;padding:0 14px;border:1px solid var(--line);border-radius:9px;background:#fff;font-weight:700;font-size:14.5px}.btn:hover{border-color:var(--accent);color:var(--accent)}
+input[type=search],.in{height:40px;padding:0 14px;border:1px solid var(--line);border-radius:10px;background:#fff;font-size:15.5px;min-width:240px}
+/* 圖表卡片 */
+.cc{margin:0}
+.cc-h{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;margin-bottom:12px}
+.cc-h h3{margin:0;font-size:18px;font-weight:800}.cc-h p{margin:3px 0 0;color:var(--muted);font-size:14.5px}
+.cc-btns{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+/* 昨日重點：圖形列 */
+.vz{display:grid;grid-template-columns:96px minmax(0,1fr) 112px;column-gap:16px;align-items:center;padding:14px 0;border-top:1px solid var(--line2)}
+.vz:first-of-type{border-top:0;padding-top:4px}.vz.ax{padding-bottom:34px}
+.vz .l{color:var(--ink2);font-size:15.5px;white-space:nowrap}.vz .v{text-align:right;font-weight:800;font-size:16px;font-variant-numeric:tabular-nums;line-height:1.4}.vz .v b{display:block}.vz .v .a{color:var(--f2)}.vz .v .c{color:var(--f3)}.vz .v .r{color:var(--bad)}.vz .v .m{color:var(--muted)}
+.axis{position:relative;height:32px;border-bottom:1px solid var(--line);background:linear-gradient(90deg,var(--line2) 1px,transparent 1px) 0 0/var(--stepw) 100%}
+.axis .dot.c3{top:66%}.axis .tk{position:absolute;top:36px;font-size:13px;color:var(--muted);transform:translateX(-50%)}
+.axis .dot{position:absolute;top:34%;width:15px;height:15px;border-radius:50%;transform:translate(-50%,-50%);border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.18)}
+.dbars{display:grid;gap:5px}.dbar{height:18px;border-radius:5px;background:var(--soft);position:relative;overflow:hidden}.dbar i{position:absolute;left:0;top:0;bottom:0;border-radius:5px}
+.stk{display:flex;height:24px;border-radius:6px;overflow:hidden;background:var(--soft)}.stk i{display:block}
+.vz .fl{display:flex;align-items:center}
+.cc-ctl{display:none;flex-wrap:wrap;gap:12px 24px;align-items:center;margin:0 0 14px;padding:12px 14px;background:var(--soft);border-radius:10px;font-size:14.5px;color:var(--ink2)}
+.cc-ctl label{display:inline-flex;gap:10px;align-items:center}.cc-ctl output{min-width:58px;color:var(--ink);font-weight:800}
+.cc-ctl input[type=range]{width:150px;accent-color:var(--accent)}.cc-ctl .seg button{padding:6px 12px;font-size:14px}
+.cc.open .cc-ctl{display:flex}.cc-cv{position:relative;margin-top:auto}.cc-cv canvas{width:100%;display:block;border-radius:10px;background:#fff}
+.tip{position:absolute;pointer-events:none;z-index:5;min-width:170px;padding:10px 12px;border-radius:10px;background:#17222d;color:#fff;font-size:14px;box-shadow:0 8px 24px rgba(0,0,0,.28);display:none}
+.tip b{display:block;margin-bottom:4px}.tip div{display:flex;justify-content:space-between;gap:18px}
+/* 表格 */
+.tw{overflow:auto;max-height:560px;border:1px solid var(--line);border-radius:12px;background:#fff}
+table.t{width:100%;border-collapse:collapse;font-size:15px}
+.t th{position:sticky;top:0;background:var(--soft);color:var(--muted);font-size:14px;font-weight:700;text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);white-space:nowrap;cursor:pointer;user-select:none}
+.t td{padding:11px 14px;border-bottom:1px solid var(--line2);white-space:nowrap}.t .n{text-align:right;font-variant-numeric:tabular-nums}.t th.n{text-align:right}
+.t tr:hover td{background:var(--soft)}.t tr.tr td{color:var(--muted)}
+.chip{display:inline-block;padding:2px 10px;border-radius:99px;font-size:13.5px;font-weight:700;background:var(--soft);color:var(--ink2);white-space:nowrap}
+.chip.bad{background:var(--badS);color:var(--bad)}.chip.warn{background:var(--warnS);color:var(--warn)}.chip.ok{background:var(--goodS);color:var(--good)}.chip.blue{background:var(--accentS);color:var(--accent)}
+.empty{padding:34px;text-align:center;color:var(--muted)}
+.stat{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:14px}
+.stat div{padding:14px 16px;border-radius:12px;background:var(--soft)}.stat small{display:block;color:var(--muted);font-size:14px;font-weight:700}.stat b{font-size:26px;font-variant-numeric:tabular-nums}.stat em{display:block;font-style:normal;font-size:13.5px;color:var(--muted)}
+.stat .w b{color:var(--warn)}.stat .r b{color:var(--bad)}
+.wait{display:grid;grid-template-columns:1fr 1fr;gap:14px}.wait div{padding:14px 16px;background:var(--soft);border-radius:12px}.wait small{display:block;color:var(--muted);font-size:14px;font-weight:700}.wait b{font-size:30px}.wait b span{font-size:14px;color:var(--muted);font-weight:600;margin-left:4px}
+.note{color:var(--muted);font-size:14px;margin:12px 2px}
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);padding:11px 20px;border-radius:10px;background:#17222d;color:#fff;font-size:15px;z-index:99;opacity:0;transition:.2s;pointer-events:none}.toast.on{opacity:1}
+.acc{border:1px solid var(--line);border-radius:12px;overflow:hidden}.acc+.acc{margin-top:12px}.acc>button{width:100%;display:flex;justify-content:space-between;padding:13px 16px;border:0;background:var(--soft);font-weight:700;font-size:16px;text-align:left}
+.acc .ab{padding:6px 16px 14px;display:none}.acc.on .ab{display:block}
+.hero{display:flex;gap:16px;align-items:baseline;flex-wrap:wrap;margin:0 0 18px}.hero h2{margin:0;font-size:30px}.hero span{color:var(--muted);font-size:16px}
+@media (max-width:1000px){
+  .shell{grid-template-columns:1fr}
+  nav.side{position:static;height:auto;display:flex;overflow-x:auto;padding:8px;border-right:0;border-bottom:1px solid var(--line)}
+  nav.side h4{display:none}nav.side a{white-space:nowrap;border-left:0}
+  header.top{height:auto;flex-wrap:wrap;padding:10px 14px;gap:10px}.search{order:5;flex-basis:100%;max-width:none;margin:0}.fresh{display:none}
+  .content{padding:18px 16px 48px}.g2,.g3,.g4{grid-template-columns:1fr}.cols{column-gap:14px}
+}
+</style>
+</head>
+<body><script>window.__BODY="\n<header class=\"top\">\n  <div class=\"brand\"><i>三<\/i><div><b>三倉看板<\/b><span>2F ／ 3F 自動倉<\/span><\/div><\/div>\n  <div class=\"boards\" id=\"boards\"><\/div>\n  <div class=\"search\"><input id=\"q\" type=\"text\" placeholder=\"輸入件號或台車號，例如 9098113046、M0442\" autocomplete=\"off\"><kbd>/<\/kbd><div class=\"sugg\" id=\"sugg\"><\/div><\/div>\n  <div class=\"fresh\" tabindex=\"0\"><span class=\"dot\"><\/span><span id=\"freshText\"><\/span><div class=\"pop\" id=\"pop\"><\/div><\/div>\n<\/header>\n<div class=\"shell\"><nav class=\"side\" id=\"side\"><\/nav><main><div class=\"content\" id=\"page\"><\/div><\/main><\/div>\n<div class=\"toast\" id=\"toast\"><\/div>\n\n";</script><script type="text/plain" id="app">
+'use strict';
+const D = window.DATA, FL = ['2F','3F'], COL = {'2F':'#2563eb','3F':'#e8710a'};
+const $ = (s,r=document)=>r.querySelector(s), $$ = (s,r=document)=>[...r.querySelectorAll(s)];
+const esc = v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt=(n,d=0)=>n==null||isNaN(n)?'–':Number(n).toLocaleString('zh-TW',{maximumFractionDigits:d,minimumFractionDigits:d});
+const pct=(n,d=1)=>n==null||isNaN(n)?'–':fmt(n*100,d)+'%';
+const hh=h=>{if(h==null)return'–';let H=Math.floor(h),M=Math.round((h-H)*60);if(M==60){H++;M=0}return String(H).padStart(2,'0')+':'+String(M).padStart(2,'0')};
+const md=d=>d.slice(5).replace('-','/');
+const WK=['日','一','二','三','四','五','六'];
+const wk=d=>'星期'+WK[new Date(d+'T00:00:00Z').getUTCDay()];
+const FONT='"Microsoft JhengHei UI","Microsoft JhengHei","PingFang TC",Arial,sans-serif';
+const pl=p=>`<a href="#/search/${encodeURIComponent(p)}">${esc(p)}</a>`;
+let LS={};try{LS=JSON.parse(localStorage.getItem('sancang.v3')||'{}')}catch(e){}
+const saveLS=()=>{try{localStorage.setItem('sancang.v3',JSON.stringify(LS))}catch(e){}};
+function toast(t){const e=$('#toast');e.textContent=t;e.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove('on'),2400)}
+
+/* ================= 資料輔助 ================= */
+const DAYS=D.ops.days, LAST=DAYS[DAYS.length-1], OPN={north:'北區出貨',replenish:'副倉補充',follow:'副倉據點（FOLLOW）',puton:'進貨上架'};
+function metric(day,op,fl){
+  const m=day.m[op];if(!m)return null;if(fl!=='ALL')return m[fl]||null;
+  const a=m['2F'],b=m['3F'];if(!a||!b)return a||b||null;
+  const st=a.stations+b.stations,w=(x,y)=>(x*a.stations+y*b.stations)/st,pts=a.points+b.points;
+  const ah=w(a.actualHours,b.actualHours),wh=w(a.waitHours,b.waitHours);
+  return {stations:st,points:pts,actualHours:ah,waitHours:wh,ratio:wh/(ah+wh||1),totalPerItem:(ah+wh)*st*3600/pts,actualPerItem:ah*st*3600/pts,waitPerItem:wh*st*3600/pts};
+}
+function prevDay(op,fl){for(let i=DAYS.length-2;i>=0;i--){const m=metric(DAYS[i],op,fl);if(m)return m}return null}
+function monthWait(fl,month){let o=0,oc=0,g=0,gc=0;for(const d of DAYS){if(d.d.slice(0,7)!==month)continue;const m=d.m.north&&d.m.north[fl];if(!m)continue;o+=m.openSum;oc+=m.openCount;g+=m.ongoingSum;gc+=m.ongoingCount}return {open:oc?o/oc:null,ongoing:gc?g/gc:null,oc,gc}}
+const lastMonth=LAST.d.slice(0,7), prevMonth=(()=>{const [y,m]=lastMonth.split('-').map(Number);return m===1?`${y-1}-12`:`${y}-${String(m-1).padStart(2,'0')}`})();
+
+/* ================= 圖表引擎 =================
+   畫面：依卡片寬度畫（真實像素字級，所以字不會被縮小）、2 倍以上解析度。
+   複製／PNG：另外用 1400×600、2 倍解析度重畫一張，貼進信件或簡報不糊。 */
+const CFG={}, st=id=>(LS[id]=LS[id]||{});
+function niceCeil(v){if(!(v>0))return 1;const e=Math.pow(10,Math.floor(Math.log10(v))),m=v/e;return(m<=1?1:m<=2?2:m<=2.5?2.5:m<=5?5:10)*e}
+function niceTop(v){if(!(v>0))return 1;const e=Math.pow(10,Math.floor(Math.log10(v))),m=v/e;return([1,1.2,1.5,2,2.5,3,4,5,6,8,10].find(c=>c>=m-1e-9))*e}
+function ticksOf(max,min=0,count=5){const step=niceCeil((max-min)/count),a=[];for(let v=Math.ceil(min/step-1e-9)*step;v<=max+step/1e6;v+=step)a.push(+v.toFixed(6));return a}
+function visible(cfg,s){const n=cfg.labels.length,r=cfg.ranges?Math.min(n,s.range||cfg.defRange||n):n;return {from:n-r,n:r}}
+function chartCard(id,cfg){CFG[id]=cfg;return `<section class="card cc" id="cc-${id}"><div class="cc-h"><div><h3>${cfg.title}${cfg.sample?'<span class="tag">示意</span>':''}</h3>${cfg.sub?`<p>${cfg.sub}</p>`:''}</div><div class="cc-btns"><button class="btn" data-ca="adj" data-id="${id}">調整</button><button class="btn" data-ca="copy" data-id="${id}">複製圖</button><button class="btn" data-ca="png" data-id="${id}">PNG</button>${cfg.noData?'':`<button class="btn" data-ca="tsv" data-id="${id}">複製資料</button>`}</div></div><div class="cc-ctl" id="ctl-${id}"></div><div class="cc-cv"><canvas id="cv-${id}"></canvas><div class="tip" id="tip-${id}"></div></div></section>`}
+function autoScale(cfg,s){
+  const {from,n}=visible(cfg,s);let hi=0;
+  if(cfg.bars&&cfg.bars.length){if(cfg.grouped){cfg.bars.forEach(b=>b.values.slice(from).forEach(v=>{if(v>hi)hi=v}))}else{for(let i=from;i<from+n;i++)hi=Math.max(hi,cfg.bars.reduce((a,b)=>a+(b.values[i]||0),0))}}
+  (cfg.lines||[]).filter(l=>l.axis!=='right').forEach(l=>l.values.slice(from).forEach(v=>{if(v!=null&&v>hi)hi=v}));
+  const auto=cfg.left&&cfg.left.max!=null?cfg.left.max:niceTop(hi*1.03||1);
+  let lo=0;(cfg.lines||[]).filter(l=>l.axis!=='right').forEach(l=>l.values.slice(from,from+n).forEach(v=>{if(v!=null&&v<lo)lo=v}));if(cfg.grouped&&cfg.bars)cfg.bars.forEach(b=>b.values.slice(from,from+n).forEach(v=>{if(v!=null&&v<lo)lo=v}));
+  const autoLo=lo<0?-niceTop(-lo*1.08):0;
+  const lMax=s.leftMax!=null?s.leftMax:auto,lLo=s.leftMin!=null?s.leftMin:Math.min(cfg.left&&cfg.left.min||0,autoLo),step=niceCeil(auto/20)||1;
+  let rMax=null;if(cfg.right){let rh=0;(cfg.lines||[]).filter(l=>l.axis==='right').forEach(l=>l.values.slice(from).forEach(v=>{if(v!=null&&v>rh)rh=v}));rMax=s.rightMax!=null?s.rightMax:Math.max(cfg.right.def||50,Math.min(100,Math.ceil(rh/5)*5))}
+  return {lMax,lLo,lMin:step,lSlMax:Math.max(auto*3,lMax),lStep:step,rMax};
+}
+const lineLab=(cfg,s)=>s.lineLabels!=null?s.lineLabels:!!(cfg.bars&&cfg.bars.length);
+function mountChart(id){
+  const cfg=CFG[id],s=st(id),cv=$('#cv-'+id);if(!cv)return;
+  const g=autoScale(cfg,s);let h='';
+  if(cfg.ranges)h+=`<div class="seg">${cfg.ranges.map(r=>`<button data-cr="${r}" data-id="${id}" class="${(s.range||cfg.defRange)===r?'on':''}">近 ${r} 天</button>`).join('')}</div>`;
+  if(cfg.left&&!cfg.left.fixed)h+=`<label>${esc(cfg.left.title||'左軸')}上限 <input type="range" data-cs="leftMax" data-id="${id}" min="${g.lMin}" max="${g.lSlMax}" step="${g.lStep}" value="${g.lMax}"><output>${cfg.left.fmt(g.lMax)}</output></label>`;
+  if(cfg.left&&cfg.left.adjMin)h+=`<label>${esc(cfg.left.title||'左軸')}下限 <input type="range" data-cs="leftMin" data-id="${id}" min="0" max="${g.lMax}" step="${g.lStep/5}" value="${g.lLo}"><output>${cfg.left.fmt(g.lLo)}</output></label>`;
+  if(cfg.right)h+=`<label>${esc(cfg.right.title||'右軸')}上限 <input type="range" data-cs="rightMax" data-id="${id}" min="10" max="100" step="5" value="${g.rMax}"><output>${g.rMax}%</output></label>`;
+  if(cfg.valueLabels!==false&&!cfg.draw)h+=`<label><input type="checkbox" data-cs="labels" data-id="${id}" ${s.labels?'checked':''}> 顯示長條數值</label>`;
+  if(cfg.lines&&cfg.lines.length&&!cfg.draw)h+=`<label><input type="checkbox" data-cs="lineLabels" data-id="${id}" ${lineLab(cfg,s)?'checked':''}> 顯示折線數值</label>`;
+  if(cfg.extraCtl)h+=cfg.extraCtl;
+  h+=`<button class="btn" data-ca="reset" data-id="${id}">重設</button>`;
+  $('#ctl-'+id).innerHTML=h;if(LS['_open_'+id])$('#cc-'+id).classList.add('open');
+  paintScreen(id);
+  const tip=$('#tip-'+id);
+  cv.onmousemove=e=>{const g=cv._geo;if(!g||!g.hover){tip.style.display='none';return}const r=cv.getBoundingClientRect(),html=g.hover(e.clientX-r.left,e.clientY-r.top);
+    if(!html){tip.style.display='none';return}tip.innerHTML=html;tip.style.display='block';const px=e.clientX-r.left;tip.style.left=Math.max(4,Math.min(px+16,r.width-tip.offsetWidth-4))+'px';tip.style.top=Math.max(4,e.clientY-r.top-tip.offsetHeight-10)+'px'};
+  cv.onmouseleave=()=>tip.style.display='none';
+}
+function paintScreen(id){
+  const cfg=CFG[id],s=st(id),cv=$('#cv-'+id);if(!cv)return;const W=Math.max(360,Math.floor(cv.parentNode.clientWidth));
+  const H=cfg.height?cfg.height(s,W):Math.round(Math.min(500,Math.max(320,W*.44))),dpr=Math.max(2,window.devicePixelRatio||1);
+  cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+'px';const ctx=cv.getContext('2d');ctx.setTransform(dpr,0,0,dpr,0,0);
+  cv._geo=paint(ctx,cfg,s,W,H,1,false)||null;
+}
+function exportCanvas(id){
+  const cfg=CFG[id],s=st(id),W=1400,H=cfg.expHeight?cfg.expHeight(s):600,c=document.createElement('canvas');c.width=W*2;c.height=H*2;const ctx=c.getContext('2d');ctx.setTransform(2,0,0,2,0,0);
+  paint(ctx,cfg,s,W,H,1.45,true);return c;
+}
+function paint(ctx,cfg,s,W,H,k,exp){
+  ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
+  if(cfg.draw)return cfg.draw(ctx,W,H,k,s,exp);
+  const {from,n}=visible(cfg,s),g=autoScale(cfg,s),fs=15*k;
+  const L=(cfg.left.title?74:60)*k,R=(cfg.right?80:20)*k,T=(exp?96:58)*k,B=H-(cfg.sub2?58:38)*k,pw=W-L-R,ph=B-T;
+  const labels=cfg.labels.slice(from,from+n),range=labels.length?(cfg.labels[from]+'～'+cfg.labels[from+n-1]):'';
+  if(exp){ctx.textAlign='center';ctx.fillStyle='#17222d';ctx.font=`700 ${22*k}px ${FONT}`;ctx.fillText((cfg.canvasTitle||cfg.title.replace(/<[^>]+>/g,''))+(cfg.ranges?'　'+range:''),W/2,38*k)}
+  const items=[...(cfg.bars||[]).map(b=>[b.name,b.color,'box']),...(cfg.lines||[]).map(l=>[l.name,l.color,l.dash?'dash':'line'])];
+  ctx.font=`${fs*1.05}px ${FONT}`;const lw=items.map(i=>ctx.measureText(i[0]).width+46*k),tw=lw.reduce((a,b)=>a+b,0);let lx=exp?W/2-tw/2:L,ly=exp?(T-26*k):22*k;ctx.textAlign='left';
+  items.forEach(([nm,c,kd],i)=>{if(!exp&&lx+lw[i]>W-R){lx=L;ly+=22*k}if(kd==='box'){ctx.fillStyle=c;ctx.fillRect(lx,ly-11*k,16*k,12*k)}else{ctx.strokeStyle=c;ctx.lineWidth=2.6;ctx.setLineDash(kd==='dash'?[6,4]:[]);ctx.beginPath();ctx.moveTo(lx,ly-5*k);ctx.lineTo(lx+18*k,ly-5*k);ctx.stroke();ctx.setLineDash([])}ctx.fillStyle='#3a4a59';ctx.fillText(nm,lx+24*k,ly);lx+=lw[i]});
+  const lt=ticksOf(g.lMax,g.lLo),yL=v=>B-(v-g.lLo)/((g.lMax-g.lLo)||1)*ph;
+  ctx.font=`${fs}px ${FONT}`;ctx.textAlign='right';lt.forEach(v=>{ctx.strokeStyle='#e8edf2';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(L,yL(v));ctx.lineTo(W-R,yL(v));ctx.stroke();ctx.fillStyle='#5b6b7a';ctx.fillText(cfg.left.fmt(v),L-10*k,yL(v)+fs*.35)});
+  if(g.lLo<0){ctx.strokeStyle='#7d8b99';ctx.lineWidth=1.4;ctx.beginPath();ctx.moveTo(L,yL(0));ctx.lineTo(W-R,yL(0));ctx.stroke()}
+  if(cfg.right){ctx.textAlign='left';ctx.fillStyle='#9c4a52';ticksOf(g.rMax,0).forEach(v=>ctx.fillText(v+'%',W-R+10*k,B-v/g.rMax*ph+fs*.35))}
+  ctx.strokeStyle='#c3ccd5';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(L,T);ctx.lineTo(L,B);ctx.lineTo(W-R,B);if(cfg.right)ctx.lineTo(W-R,T);ctx.stroke();
+  if(cfg.left.title&&W>480){ctx.save();ctx.translate(16*k,(T+B)/2);ctx.rotate(-Math.PI/2);ctx.textAlign='center';ctx.fillStyle='#5b6b7a';ctx.font=`${fs}px ${FONT}`;ctx.fillText(cfg.left.title,0,0);ctx.restore()}
+  if(cfg.right&&W>480){ctx.save();ctx.translate(W-22*k,(T+B)/2);ctx.rotate(Math.PI/2);ctx.textAlign='center';ctx.fillStyle='#9c4a52';ctx.font=`${fs}px ${FONT}`;ctx.fillText(cfg.right.title||'',0,0);ctx.restore()}
+  const slot=pw/(Math.max(n,cfg.minSlots||0)||1),off=cfg.minSlots&&n<cfg.minSlots?(cfg.minSlots-n)/2:0,xs=[];
+  ctx.save();ctx.beginPath();ctx.rect(L,T-4,pw,ph+4);ctx.clip();
+  labels.forEach((_,j)=>{const i=from+j,cx=L+(j+off+.5)*slot;xs.push(cx);
+    if(cfg.bars&&cfg.bars.length){
+      if(cfg.grouped){const bw=Math.min(slot*.8/cfg.bars.length,46*k),w0=bw*cfg.bars.length;cfg.bars.forEach((b,bi)=>{const v=b.values[i];if(v==null)return;ctx.fillStyle=b.color;const y=yL(v),y0=yL(Math.max(0,g.lLo));ctx.fillRect(cx-w0/2+bi*bw,Math.min(y,y0),bw-2,Math.abs(y0-y))})}
+      else{const bw=Math.min(slot*.56,62*k);let acc=0;cfg.bars.forEach(b=>{const v=b.values[i]||0;if(v<=0)return;ctx.fillStyle=b.color;const y0=yL(acc),y1=yL(acc+v);ctx.fillRect(cx-bw/2,y1,bw,y0-y1);acc+=v})}}});
+  ctx.restore();
+  const step=Math.max(1,Math.ceil(n/Math.max(4,Math.floor(pw/(62*k)))));
+  ctx.textAlign='center';ctx.fillStyle='#5b6b7a';labels.forEach((l,j)=>{if(n>8&&(n-1-j)%step!==0)return;ctx.font=`${fs}px ${FONT}`;ctx.fillText(l,xs[j],B+22*k);if(cfg.sub2&&step===1)ctx.font=`${fs*.9}px ${FONT}`,ctx.fillText((cfg.sub2[from+j]||'').replace('星期',''),xs[j],B+40*k)});
+  (cfg.lines||[]).forEach(l=>{const right=l.axis==='right',y=v=>right?B-v/g.rMax*ph:yL(v),pts=labels.map((_,j)=>{const v=l.values[from+j];return v==null?null:{x:xs[j],y:y(v),v}});
+    ctx.save();ctx.beginPath();ctx.rect(L-4,T-8,pw+8,ph+16);ctx.clip();ctx.strokeStyle=l.color;ctx.lineWidth=2.8;ctx.lineJoin='round';ctx.setLineDash(l.dash?[9,6]:[]);ctx.beginPath();let on=false;pts.forEach(p=>{if(!p){on=false;return}on?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y);on=true});ctx.stroke();ctx.setLineDash([]);
+    pts.forEach(p=>{if(!p)return;ctx.beginPath();ctx.arc(p.x,p.y,n>30?3:4.6,0,7);ctx.fillStyle='#fff';ctx.fill();ctx.strokeStyle=l.color;ctx.lineWidth=2.2;ctx.stroke()});ctx.restore();
+    if(lineLab(cfg,s)){const every=Math.max(1,Math.ceil(40*k/slot));ctx.font=`700 ${fs*.92}px ${FONT}`;ctx.textAlign='center';ctx.lineJoin='round';pts.forEach((p,j)=>{if(!p||(n-1-j)%every)return;const t=(l.fmt||(v=>fmt(v,1)))(p.v);let ty=p.y-11*k;if(ty<T+10*k)ty=p.y+19*k;ctx.lineWidth=4*k;ctx.strokeStyle='#fff';ctx.strokeText(t,p.x,ty);ctx.fillStyle=l.color;ctx.fillText(t,p.x,ty)})}});
+  if(s.labels&&n<=20&&cfg.bars&&!cfg.grouped){ctx.font=`${fs*.95}px ${FONT}`;ctx.fillStyle='#3a4a59';ctx.textAlign='center';labels.forEach((_,j)=>{const i=from+j,tot=cfg.bars.reduce((a,b)=>a+(b.values[i]||0),0);if(tot>0)ctx.fillText(cfg.left.fmt(tot),xs[j],yL(tot)-7*k)})}
+  return {hover:(x,y)=>{if(x<L||x>W-R||y<T-10||y>B+50)return null;const j=Math.max(0,Math.min(n-1,Math.floor((x-L)/slot-off)));const i=from+j;
+    return `<b>${esc(cfg.labels[i])}${cfg.sub2?'　'+esc(cfg.sub2[i]||''):''}</b>`+(cfg.bars||[]).map(b=>`<div><span><span style="color:${b.color}">■</span> ${esc(b.name)}</span><span>${b.values[i]==null?'–':esc((b.fmt||cfg.left.fmt)(b.values[i]))}</span></div>`).join('')+(cfg.lines||[]).map(l=>`<div><span><span style="color:${l.color}">●</span> ${esc(l.name)}</span><span>${l.values[i]==null?'–':esc((l.fmt||(v=>fmt(v,1)))(l.values[i]))}</span></div>`).join('')}};
+}
+function exportTSV(id){const cfg=CFG[id],s=st(id),{from,n}=visible(cfg,s),cols=[...(cfg.bars||[]),...(cfg.lines||[])];if(cfg.tsv)return cfg.tsv(s);
+  return [['',...cols.map(c=>c.name)].join('\t'),...cfg.labels.slice(from,from+n).map((l,j)=>[l,...cols.map(c=>{const v=c.values[from+j];return v==null?'':+Number(v).toFixed(4)})].join('\t'))].join('\n')}
+async function chartAction(act,id){
+  if(act==='adj'){const c=$('#cc-'+id);c.classList.toggle('open');LS['_open_'+id]=c.classList.contains('open');saveLS();paintScreen(id);return}
+  if(act==='reset'){delete LS[id];saveLS();mountChart(id);return}
+  if(act==='png'){const a=document.createElement('a');a.href=exportCanvas(id).toDataURL('image/png');a.download=(CFG[id].title.replace(/<[^>]+>/g,'')||id)+'.png';a.click();toast('已下載高解析 PNG（2800×1200）');return}
+  if(act==='copy'){try{const c=exportCanvas(id),blob=await new Promise(r=>c.toBlob(r,'image/png'));await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);toast('圖片已複製（高解析），可直接貼到信件或簡報')}catch(e){toast('這個瀏覽器不能直接複製圖片，請改用 PNG')}return}
+  if(act==='tsv'){try{await navigator.clipboard.writeText(exportTSV(id));toast('資料已複製，可貼到 Excel')}catch(e){toast('無法存取剪貼簿')}}
+}
+/* ================= 表格 ================= */
+const TBL={};
+function dataTable(id,cols,rows,opt={}){TBL[id]={cols:cols.map((c,i)=>({...c,i})),rows,opt,sort:null,q:'',lim:opt.limit||100,extra:opt.extra};return `<div id="tb-${id}">${tableInner(id)}</div>`}
+function tableInner(id){const t=TBL[id];let r=t.rows;if(t.q){const q=t.q.toUpperCase();r=r.filter(x=>x.join(' ').toUpperCase().includes(q))}
+  if(t.extra&&t.extraOn)r=r.filter(t.extra.fn);
+  if(t.sort){const [c,d]=t.sort;r=r.slice().sort((a,b)=>{const x=a[c],y=b[c];return(typeof x==='number'&&typeof y==='number'?x-y:String(x).localeCompare(String(y)))*d})}
+  t.view=r;const sh=r.slice(0,t.lim);
+  return `${t.opt.bare?'':`<div class="tools"><input type="search" data-tq="${id}" placeholder="篩選件號／內容" value="${esc(t.q)}">${t.extra?`<label class="note" style="margin:0"><input type="checkbox" data-te="${id}" ${t.extraOn?'checked':''}> ${t.extra.label}</label>`:''}<span class="sp"></span><span class="chip">${fmt(r.length)} 筆</span><button class="btn" data-tc="tsv" data-id="${id}">複製表格</button><button class="btn" data-tc="csv" data-id="${id}">匯出 CSV</button></div>`}
+  <div class="tw"><table class="t"><thead><tr>${t.cols.map((c,i)=>`<th class="${c.n?'n':''}" data-ts="${i}" data-id="${id}">${esc(c.h)}${t.sort&&t.sort[0]===c.i?(t.sort[1]>0?' ▲':' ▼'):''}</th>`).join('')}</tr></thead><tbody>${sh.map(x=>`<tr class="${t.opt.rc?t.opt.rc(x):''}">${t.cols.map(c=>`<td class="${c.n?'n':''}">${c.f(x)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>${r.length>t.lim?`<p><button class="btn" data-tm="${id}">再顯示 300 筆（共 ${fmt(r.length)}）</button></p>`:''}${r.length===0?'<div class="empty">沒有資料</div>':''}`}
+function tableText(id,sep){const t=TBL[id];return [t.cols.map(c=>c.h).join(sep),...t.view.map(r=>t.cols.map(c=>{let v=String(c.f(r)).replace(/<[^>]+>/g,'');return sep===','?'"'+v.replace(/"/g,'""')+'"':v}).join(sep))].join('\n')}
+function refreshTable(id,keepQ){const box=$('#tb-'+id);if(!box)return;box.innerHTML=tableInner(id);if(keepQ){const i=box.querySelector('[data-tq]');i.focus();i.setSelectionRange(i.value.length,i.value.length)}}
+/* ================= 共用元件 ================= */
+const seg=(attr,opts,cur)=>`<div class="seg">${opts.map(([v,t])=>`<button ${attr}="${v}" class="${v==cur?'on':''}">${t}</button>`).join('')}</div>`;
+const ph=(t,sub)=>`<div class="ph"><h1>${t}</h1>${sub?`<p>${sub}</p>`:''}</div>`;
+const sec=(t,sub)=>`<div class="sec"><h2>${t}</h2>${sub?`<span>${sub}</span>`:''}</div>`;
+function dl(cur,prev,unit,d=1,lowerBetter=true){if(cur==null||prev==null)return '';const x=cur-prev;if(Math.abs(x)<Math.pow(10,-d)/2)return '<span class="d eq">持平</span>';const up=x>0;return `<span class="d ${up===lowerBetter?'up':'down'}">${up?'↑':'↓'}${fmt(Math.abs(x),d)}${unit}</span>`}
+const S={ops:{floor:'ALL',op:'north',wfloor:'2F',hitUnit:'face',heatDate:'2026-10-07',inFloor:'ALL',ltgs:'ALL,KZ',ltw:12}};
+/* 一張「2F ｜ 3F」對齊卡：每邊 大數字 + 2 行小資訊 */
+function floorCard(href,title,right,a,b,unit,lines){
+  const col=(f,x)=>`<div class="col"><span class="pill ${f==='2F'?'f2':'f3'}">${f}</span><div class="big">${x.big}<small>${unit}</small></div>${x.lines.map(r=>`<div class="ln"><span>${r[0]}</span><b>${r[1]}</b></div>`).join('')}</div>`;
+  return `<a class="card" href="#/${href}"><div class="card-h"><h3>${title}</h3><span>${right||''}</span></div><div class="cols">${col('2F',a)}${col('3F',b)}</div></a>`;
+}
+function kpiCard(href,title,sub,rows,foot){return `<a class="card" href="#/${href}"><div class="card-h"><h3>${title}</h3><span>${sub||''}</span></div><div class="kpi"><div class="h"></div><div class="h r">2F</div><div class="h r">3F</div>${rows.map(r=>`<div class="l">${r[0]}</div>${r[3]?`<div class="v span ${r[4]||''}">${r[1]}</div>`:`<div class="v ${r[4]||''}">${r[1]}</div><div class="v ${r[5]||''}">${r[2]}</div>`}`).join('')}</div>${foot?`<div class="foot">${foot}</div>`:''}</a>`}
+/* ================= 營運看板 ================= */
+function effCfg(op,fl){
+  const days=DAYS.filter(d=>metric(d,op,fl)),ms=days.map(d=>metric(d,op,fl)),fn=OPN[op]+(fl==='ALL'?'（兩樓合計）':'（'+fl+'）');
+  return {title:fn,canvasTitle:fn+'效率',sub:'每站平均作業時間（分鐘）＝實際作業＋等待；折線＝等待時間佔比',labels:days.map(d=>md(d.d)),sub2:days.map(d=>wk(d.d)),ranges:[7,10,14,30,60],defRange:10,
+    bars:[{name:'實際作業',color:'#2f7f9d',values:ms.map(m=>m.actualHours*60)},{name:'等待',color:'#e2a14c',values:ms.map(m=>m.waitHours*60)}],
+    lines:[{name:'等待時間佔比',color:'#a64b52',axis:'right',values:ms.map(m=>m.ratio*100),fmt:v=>fmt(v,1)+'%'}],left:{title:'作業時間(分鐘)',fmt:v=>fmt(v)},right:{title:'等待時間佔比(%)',def:op==='follow'?60:50}};
+}
+const vzTime=(rows)=>{const all=rows.flatMap(r=>[r[1],r[2]]).filter(v=>v!=null&&v>0),lo=Math.min(16,Math.floor(Math.min(...all,16))),hi=Math.max(22,Math.ceil(Math.max(...all,22))),n=hi-lo,pos=h=>Math.max(0,Math.min(100,(h-lo)/n*100));
+  return rows.map(([lab,a,c])=>`<div class="vz ax"><div class="l">${lab}</div><div class="axis" style="--stepw:${100/n}%">${Array.from({length:n+1},(_,i)=>`<span class="tk" style="left:${i/n*100}%">${lo+i}</span>`).join('')}${a?`<span class="dot" style="left:${pos(a)}%;background:var(--f2)"></span>`:''}${c?`<span class="dot c3" style="left:${pos(c)}%;background:var(--f3)"></span>`:''}</div><div class="v"><b class="a">2F ${a?hh(a):'–'}</b><b class="c">3F ${c?hh(c):'–'}</b></div></div>`).join('')};
+const vzBars=(lab,a,c)=>`<div class="vz"><div class="l">${lab}</div><div class="dbars"><div class="dbar"><i style="width:${a*100}%;background:var(--f2)"></i></div><div class="dbar"><i style="width:${c*100}%;background:var(--f3)"></i></div></div><div class="v"><b class="a">2F ${pct(a)}</b><b class="c">3F ${pct(c)}</b></div></div>`;
+const vzHit=(rows)=>{const all=rows.flatMap(r=>[r[1],r[2]]),hi=Math.max(1.4,Math.ceil(Math.max(...all)*10)/10),n=Math.round((hi-1)*10),pos=v=>Math.max(0,Math.min(100,(v-1)/(hi-1)*100));
+  return rows.map(([lab,a,c])=>`<div class="vz ax"><div class="l">${lab}</div><div class="axis" style="--stepw:${100/n}%">${Array.from({length:n+1},(_,i)=>`<span class="tk" style="left:${i/n*100}%">${fmt(1+i/10,1)}</span>`).join('')}<span class="dot" style="left:${pos(a)}%;background:var(--f2)"></span><span class="dot c3" style="left:${pos(c)}%;background:var(--f3)"></span></div><div class="v"><b class="a">2F ${fmt(a,2)}</b><b class="c">3F ${fmt(c,2)}</b></div></div>`).join('')};
+const vzCard=(href,title,sub,body,foot)=>`<a class="card" href="#/${href}"><div class="card-h"><h3>${title}</h3><span>${sub||''}　›</span></div>${body}${foot?`<div class="foot">${foot}</div>`:''}</a>`;
+function pOpsHome(){
+  const ds=LAST.d,ins=LAST.t&&LAST.t.insp,UY=D.util.yesterday||D.util,U=UY.floors,I=D.inbound,N3=I.olderThan;
+  const opCard=op=>{const a=metric(LAST,op,'2F'),b=metric(LAST,op,'3F'),pa=prevDay(op,'2F'),pb=prevDay(op,'3F');
+    const L=(m,p)=>({big:fmt(m.points),lines:[['每點',`${fmt(m.totalPerItem,1)} 秒 ${dl(m.totalPerItem,p&&p.totalPerItem,'',1)}`],['等待佔比',`${pct(m.ratio,0)} ${dl(m.ratio*100,p&&p.ratio*100,'',1)}`]]});
+    return floorCard('ops/eff',OPN[op],'',L(a,pa),L(b,pb),'點')};
+  const sumOpen=(f,old)=>I.openDays.filter(r=>old?r.d<N3:r.d>=N3).reduce((x,r)=>x+r[f].points,0);
+  const lastDay=I.daily[I.daily.length-1],hit=(c,f,k)=>D.hit.face.filter(r=>r.cat===c&&r.floor===f).slice(-1)[0][k];
+  const t2=LAST.t&&LAST.t['2F'],t3=LAST.t&&LAST.t['3F'];
+  return `${ph('營運看板',`昨日 ${md(ds)}（${wk(ds)}）　資料更新 ${D.fresh.main}`)}
+  ${sec('昨日作業','點數與效率；箭頭是和前一個有資料的日子比較（綠＝改善）')}
+  <div class="grid g4">${['north','replenish','follow','puton'].map(opCard).join('')}</div>
+  ${sec('昨日重點')}
+  <div class="grid g4">
+   ${vzCard('ops/workload','下班時間','最晚完成',vzTime([['揀貨',t2&&t2.pick&&t2.pick[1],t3&&t3.pick&&t3.pick[1]],['上架',t2&&t2.puton&&t2.puton[1],t3&&t3.puton&&t3.puton[1]],['查照',ins&&ins.floors&&ins.floors['2F']&&ins.floors['2F'].last,ins&&ins.floors&&ins.floors['3F']&&ins.floors['3F'].last]]),'查照：INSPECTION 沒有的筆數改用 991 CHECKDT 補（副倉據點）')}
+   ${vzCard('ops/util','儲位／貨架／空間利用率',D.util.yesterdayDate?'昨日日終 '+md(D.util.yesterdayDate):'目前',vzBars('儲位',U['2F'].used/U['2F'].slots,U['3F'].used/U['3F'].slots)+vzBars('貨架',U['2F'].racksUsed/U['2F'].racks,U['3F'].racksUsed/U['3F'].racks)+vzBars('空間',U['2F'].volRate,U['3F'].volRate),'儲位、貨架：庫存 > 0 ÷ 全部；空間：用體積算')}
+   ${vzCard('ops/inbound','進貨追蹤：未上架','報表日 '+md(I.reportDate)+'，紅＝超過 3 個工作日',(()=>{const tot=f=>sumOpen(f,1)+sumOpen(f,0),mx=Math.max(tot('2F'),tot('3F'))||1;return ['2F','3F'].map(f=>`<div class="vz"><div class="l"><span class="pill ${f==='2F'?'f2':'f3'}">${f}</span></div><div><div class="stk" style="width:${tot(f)/mx*100}%"><i style="width:${sumOpen(f,1)/(tot(f)||1)*100}%;background:var(--bad)"></i><i style="flex:1;background:#c9d3dd"></i></div></div><div class="v"><b class="r">超過 ${fmt(sumOpen(f,1))}</b><b class="m">未超過 ${fmt(sumOpen(f,0))}</b></div></div>`).join('')+(()=>{const m=Math.max(lastDay.open,lastDay.putaway)||1;return `<div class="vz"><div class="l">昨日</div><div class="dbars"><div class="dbar"><i style="width:${lastDay.open/m*100}%;background:#7b8da0"></i></div><div class="dbar"><i style="width:${lastDay.putaway/m*100}%;background:var(--good)"></i></div></div><div class="v"><b class="m">開箱 ${fmt(lastDay.open)}</b><b style="color:var(--good)">上架 ${fmt(lastDay.putaway)}</b></div></div>`})()})(),'單位：991 點（昨日為兩樓合計）')}
+   ${vzCard('ops/hit','貨架命中率',md(D.hit.through)+'，點 ÷ 次',vzHit([['出貨・指定',hit('指定面','2F','outRate'),hit('指定面','3F','outRate')],['出貨・其他',hit('其他面','2F','outRate'),hit('其他面','3F','outRate')],['進貨・指定',hit('指定面','2F','inRate'),hit('指定面','3F','inRate')],['進貨・其他',hit('其他面','2F','inRate'),hit('其他面','3F','inRate')]]),'到工作站一趟完成幾點，越高越好')}
+  </div>
+  ${sec('常用圖表','每張都可調座標、複製成圖片貼進信件或簡報')}
+  <div class="grid g2">${chartCard('hN',effCfg('north','ALL'))}${chartCard('hR',effCfg('replenish','ALL'))}${chartCard('hF',effCfg('follow','ALL'))}${chartCard('hP',effCfg('puton','ALL'))}</div>
+  <div style="height:20px"></div>${chartCard('heat',heatCfg())}`;
+}
+/* ================= 進貨時間（每週橫條） ================= */
+const LTG={ALL:'全部零件',KZ:'國瑞件 KG0',IMP:'進口件',DOM:'其他國產件'};
+const LTSET={'ALL,KZ':'全部零件＋國瑞件','ALL,KZ,IMP,DOM':'四類都看','KZ':'只看國瑞件'};
+const LTST=[['到貨（開櫃）→開箱','#2f7f9d'],['包裝','#a64b52'],['開箱→上架','#e2a14c']];
+const mondayOf=d=>{const t=new Date(d+'T00:00:00Z'),w=(t.getUTCDay()+6)%7;t.setUTCDate(t.getUTCDate()-w);return t.toISOString().slice(0,10)};
+function ltWeeks(){
+  const by={};
+  D.lt.days.forEach(day=>{const w=mondayOf(day.d);(by[w]=by[w]||[]).push(day)});
+  return Object.keys(by).sort().reverse().map(w=>({w,days:by[w]}));
+}
+function ltAggW(days,g){
+  const kinds=g==='ALL'?['KZ','IMP','DOM','OTH']:[g],t={nb:0,sb:0,na:0,sa:0,np:0,sp1:0,sp2:0,sp3:0};
+  days.forEach(day=>kinds.forEach(k=>{const x=day.g[k];if(x)for(const f in t)t[f]+=x[f]}));
+  const n1=t.na+t.np,v=[n1?t.sa/n1/1440:0,n1?(t.sp1+t.sp2+t.sp3)/n1/1440:0,t.nb?t.sb/t.nb/1440:0];
+  return {t,v,n:t.nb,total:v[0]+v[1]+v[2]};
+}
+function ltRows(){
+  const wk=+S.ops.ltw,gs=S.ops.ltgs.split(','),rows=[];
+  const cut=new Date();cut.setUTCDate(cut.getUTCDate()-14);const open=cut.toISOString().slice(0,10);
+  ltWeeks().slice(0,wk).forEach(({w,days})=>{const end=new Date(w+'T00:00:00Z');end.setUTCDate(end.getUTCDate()+6);const lab=md(w)+'～'+md(end.toISOString().slice(0,10));
+    gs.forEach((g,i)=>{const a=ltAggW(days,g);if(a.n>0)rows.push({w,lab,first:i===0,g,partial:D.lt.basis==='start'&&w>=open,...a})})});
+  return rows;
+}
+function ltWeekCfg(){
+  const rows=ltRows(),weeks=new Set(rows.map(r=>r.w)).size;
+  const rh=26,H=(k,exp)=>Math.round(((exp?96:58)+rows.length*rh+weeks*16+58)*k);
+  return {title:'每週進貨各環節平均天數',canvasTitle:'每週進貨各環節平均天數（'+S.ops.ltgs.split(',').map(g=>LTG[g]).join('、')+'）',sub:(D.lt.basis==='start'?'每一週到貨（進口件為開櫃）的貨':'每一週上架的貨（暫時依上架週彙總，改版後會變成依到貨週）')+'，從起算到上架完成平均每個環節幾天；顏色＝環節'+(D.lt.basis==='start'?'，＊＝這週還有貨沒上架，天數會再變長':''),labels:[],
+    height:(s,W)=>H(1,false),expHeight:()=>H(1.45,true),
+    tsv:()=>['週\t群組\t點數\t'+LTST.map(x=>x[0]).join('\t')+'\t合計',...rows.map(r=>[r.lab,LTG[r.g],r.n,...r.v.map(x=>x.toFixed(2)),r.total.toFixed(2)].join('\t'))].join('\n'),
+    draw:(ctx,W,Hh,k,s,exp)=>{
+      const fs=15*k,LM=216*k,RM=118*k,T=(exp?96:56)*k,pw=W-LM-RM,rowH=rh*k,bh=19*k,gapW=16*k;
+      if(exp){ctx.textAlign='center';ctx.fillStyle='#17222d';ctx.font=`700 ${22*k}px ${FONT}`;ctx.fillText('每週進貨各環節平均天數（'+S.ops.ltgs.split(',').map(g=>LTG[g]).join('、')+'）',W/2,38*k)}
+      const mx=Math.max(1,...rows.map(r=>r.total)),top=niceTop(mx*1.08),ticks=ticksOf(top,0,5),x=v=>LM+v/top*pw;
+      ctx.font=`${fs}px ${FONT}`;ctx.textAlign='left';let lx=exp?W/2-LTST.reduce((a,[n])=>a+ctx.measureText(n).width+44*k,0)/2:LM,ly=exp?T-26*k:24*k;
+      LTST.forEach(([n,c])=>{ctx.fillStyle=c;ctx.fillRect(lx,ly-11*k,16*k,12*k);ctx.fillStyle='#3a4a59';ctx.fillText(n,lx+22*k,ly);lx+=ctx.measureText(n).width+44*k});
+      const yEnd=T+rows.length*rowH+weeks*gapW;
+      ctx.textAlign='center';ticks.forEach(v=>{ctx.strokeStyle='#e8edf2';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x(v),T-4*k);ctx.lineTo(x(v),yEnd);ctx.stroke();ctx.fillStyle='#5b6b7a';ctx.fillText(fmt(v,v%1?1:0),x(v),yEnd+20*k)});
+      ctx.fillStyle='#5b6b7a';ctx.fillText('平均天數',LM+pw/2,yEnd+42*k);
+      let y=T;const geo=[];
+      rows.forEach((r,i)=>{if(r.first&&i>0)y+=gapW;else if(i===0)y+=gapW/2;const yy=y,by=yy+(rowH-bh)/2;
+        if(r.first){ctx.textAlign='left';ctx.fillStyle='#17222d';ctx.font=`700 ${fs}px ${FONT}`;ctx.fillText(r.lab+(r.partial?'＊':''),8*k,by+bh*.78)}
+        ctx.textAlign='right';ctx.fillStyle='#3a4a59';ctx.font=`${fs}px ${FONT}`;ctx.fillText(LTG[r.g],LM-10*k,by+bh*.78);
+        let acc=0;r.v.forEach((v,j)=>{const x0=x(acc),w=x(acc+v)-x0;if(w>0){ctx.fillStyle=LTST[j][1];ctx.fillRect(x0,by,Math.max(w-1,0),bh);if(w>30*k){ctx.fillStyle='#fff';ctx.textAlign='center';ctx.font=`700 ${fs*.9}px ${FONT}`;ctx.fillText(fmt(v,1),x0+w/2,by+bh*.74)}}acc+=v});
+        ctx.textAlign='left';ctx.fillStyle='#17222d';ctx.font=`700 ${fs}px ${FONT}`;ctx.fillText(fmt(r.total,1)+' 天',x(r.total)+8*k,by+bh*.78);
+        ctx.textAlign='right';ctx.fillStyle='#7a8794';ctx.font=`${fs*.9}px ${FONT}`;ctx.fillText(fmt(r.n)+' 點',W-10*k,by+bh*.78);
+        geo.push({y0:yy,y1:yy+rowH,r});y+=rowH});
+      return {hover:(mx2,my)=>{const h=geo.find(q=>my>=q.y0&&my<q.y1);if(!h)return null;const r=h.r;return `<b>${esc(r.lab)}　${esc(LTG[r.g])}</b>`+LTST.map(([n,c],j)=>`<div><span><span style="color:${c}">■</span> ${esc(n)}</span><span>${fmt(r.v[j],2)} 天</span></div>`).join('')+`<div><span>合計</span><span>${fmt(r.total,2)} 天</span></div><div><span>點數</span><span>${fmt(r.n)}</span></div>`}}}};
+}
+function pOpsLT(){
+  const L=D.lt,A=L.arr,rows=ltRows();
+  const cols=[{h:'週',f:r=>r.lab+(r.partial?'＊':'')},{h:'群組',f:r=>LTG[r.g]},{h:'點數',n:1,f:r=>fmt(r.n)},...LTST.map(([n],j)=>({h:n+'（天）',n:1,f:r=>fmt(r.v[j],2)})),{h:'合計（天）',n:1,f:r=>fmt(r.total,2)}];
+  const arr=A.rows.length?chartCard('ltArr',{title:'進口件：到櫃→開櫃等待天數',canvasTitle:'進口件到櫃→開櫃等待天數',sub:'依開櫃日；從排程第一次看到貨櫃在「已到貨」算起，誤差約一個排程週期',labels:A.rows.map(r=>md(r[0])),bars:[{name:'平均等待天數',color:'#a64b52',values:A.rows.map(r=>r[2])}],left:{title:'天',fmt:v=>fmt(v,1)},minSlots:7}):
+    `<div class="card"><div class="card-h"><h3>進口件：到櫃→開櫃</h3><span>累積中</span></div><div class="empty">這段時間沒有歷史紀錄，從 ${esc(A.since.slice(0,10))} 起每次排程記下新到的貨櫃；已追蹤 ${fmt(A.tracked)} 個貨櫃，其中 ${fmt(A.withStart)} 個已開櫃。累積幾天後這裡會出現圖。</div></div>`;
+  return `${ph('進貨時間',(D.lt.basis==='start'?'每一週到貨的貨':'每一週上架的貨')+'，從到貨（進口件為開櫃）到上架完成，每個環節平均幾天；單位＝天')}
+  <div class="tools" style="margin-top:18px">${seg('data-ltgs',Object.entries(LTSET),S.ops.ltgs)}${seg('data-ltw',[[8,'近 8 週'],[12,'近 12 週'],[26,'近 26 週']],+S.ops.ltw)}</div>
+  <p class="note" style="margin:10px 2px 14px">起算點：國瑞件與其他國產件＝到貨登記時間；進口件＝貨櫃開櫃時間（不含貨櫃在倉庫等開櫃的時間，見下方）。「包裝」只有國瑞件有，全部零件的包裝是平均到每一點上；上架時間＝開箱檔狀態為已入庫的異動時間（系統批次回寫，約早晚各一次），兩個開箱檔表合併計算。</p>
+  ${chartCard('ltWeek',ltWeekCfg())}
+  ${sec('進口件到櫃等待')}${arr}
+  ${sec('每週明細')}${dataTable('ltTbl',cols,rows,{limit:80})}`;
+}
+function pOpsEff(){
+  const op=S.ops.op,fl=S.ops.floor,mn=m=>Number(m.slice(5));
+  const d1=(c,q)=>c==null||q==null?'':dl(c,q,' 秒',1);
+  const rows=DAYS.slice().reverse().flatMap(d=>(fl==='ALL'?FL:[fl]).map(f=>{const m=metric(d,op,f);return m?[d.d,f,m.stations,m.points,m.actualHours,m.waitHours,m.ratio,m.totalPerItem,m.actualPerItem,m.waitPerItem]:null}).filter(Boolean));
+  const dayCard=f=>{const m=metric(LAST,op,f),pm=prevDay(op,f);return `<div class="card"><div class="card-h"><h3>${OPN[op]}　<span class="pill ${f==='2F'?'f2':'f3'}">${f}</span></h3><span>${md(LAST.d)}</span></div><div class="stat">${m?`<div><small>站數</small><b>${m.stations}</b></div><div><small>點數</small><b>${fmt(m.points)}</b></div><div><small>每點作業（秒）</small><b>${fmt(m.totalPerItem,1)}</b><em>${dl(m.totalPerItem,pm&&pm.totalPerItem,'',1)}</em></div><div><small>每點實際（秒）</small><b>${fmt(m.actualPerItem,1)}</b></div><div class="w"><small>每點等待（秒）</small><b>${fmt(m.waitPerItem,1)}</b></div><div class="w"><small>等待佔比</small><b>${pct(m.ratio)}</b><em>${dl(m.ratio*100,pm&&pm.ratio*100,'',1)}</em></div>`:'<div class="empty">沒有資料</div>'}</div></div>`};
+  const waitCard=f=>{const a=monthWait(f,lastMonth),p=monthWait(f,prevMonth);return `<div class="card"><div class="card-h"><h3>北區出貨等待　<span class="pill ${f==='2F'?'f2':'f3'}">${f}</span></h3><span>${mn(lastMonth)} 月平均</span></div><div class="wait"><div><small>開站等待</small><b>${fmt(a.open,1)}<span>秒</span></b><small>${fmt(a.oc)} 次開站</small></div><div><small>作業中等待</small><b>${fmt(a.ongoing,1)}<span>秒</span></b><small>${fmt(a.gc)} 筆紀錄</small></div></div><p class="note">與 ${mn(prevMonth)} 月比較：開站 ${fmt(p.open,1)} 秒 ${d1(a.open,p.open)}　作業中 ${fmt(p.ongoing,1)} 秒 ${d1(a.ongoing,p.ongoing)}</p></div>`};
+  return `${ph('效率與等待','口徑同「三倉作業日報」；6/17～10/7')}
+  <div class="tools" style="margin-top:18px">${seg('data-eop',Object.entries(OPN),op)}${seg('data-efl',[['ALL','兩樓合計'],['2F','2F'],['3F','3F']],fl)}</div>
+  ${chartCard('eff',effCfg(op,fl))}
+  ${sec('最新一天與當月等待時間','上面是 '+OPN[op]+' 的最新一天；下面是北區出貨的當月平均等待')}
+  <div class="grid g2">${dayCard('2F')}${dayCard('3F')}${waitCard('2F')}${waitCard('3F')}</div>
+  ${sec('每日明細')}${dataTable('effTbl',[{h:'日期',f:r=>r[0]},{h:'樓層',f:r=>r[1]},{h:'站數',n:1,f:r=>r[2]},{h:'點數',n:1,f:r=>fmt(r[3])},{h:'站均實際（時）',n:1,f:r=>fmt(r[4],2)},{h:'站均等待（時）',n:1,f:r=>fmt(r[5],2)},{h:'等待佔比',n:1,f:r=>pct(r[6])},{h:'每點（秒）',n:1,f:r=>fmt(r[7],1)},{h:'實際（秒）',n:1,f:r=>fmt(r[8],1)},{h:'等待（秒）',n:1,f:r=>fmt(r[9],1)}],rows,{limit:60})}`;
+}
+function stripCfg(fl){
+  const days=DAYS.filter(d=>d.t&&d.t[fl]);
+  const rowsOf=s=>Math.min(days.length,s.range||14);
+  return {title:fl+' 每天從幾點做到幾點',canvasTitle:fl+' 作業時間軸（橫條＝第一筆到最後一筆，圓點＝下班）',sub:'揀貨、上架、查照；滑過橫條看明細',noData:0,valueLabels:false,ranges:[7,14,30],defRange:14,labels:days.map(d=>d.d),
+   height:(s,W)=>112+rowsOf(s)*30,expHeight:s=>Math.max(600,130+rowsOf(s)*34),
+   tsv:s=>['日期\t揀貨開始\t揀貨最晚\t上架開始\t上架最晚\t查照開始\t查照最晚',...days.map(d=>[d.d,hh(d.t[fl].pick&&d.t[fl].pick[0]),hh(d.t[fl].pick&&d.t[fl].pick[1]),hh(d.t[fl].puton&&d.t[fl].puton[0]),hh(d.t[fl].puton&&d.t[fl].puton[1]),hh(d.t.insp&&d.t.insp.span[0]),hh(d.t.insp&&d.t.insp.span[1])].join('\t'))].join('\n'),
+   draw:(ctx,W,H,k,s,exp)=>{const r=rowsOf(s),rows=days.slice(-r).reverse(),L=96*k,R=30*k,T=(exp?118:78)*k,B=H-18*k,t0=6,t1=22,x=h=>L+(W-L-R)*(h-t0)/(t1-t0),rh=(B-T)/rows.length,fs=15*k;
+    if(exp){ctx.textAlign='center';ctx.fillStyle='#17222d';ctx.font=`700 ${22*k}px ${FONT}`;ctx.fillText(fl+' 作業時間軸（橫條＝第一筆到最後一筆，圓點＝下班）',W/2,38*k)}
+    const kinds=[['揀貨','#2563eb',t=>t.pick],['上架','#7e57c2',t=>t.puton],['查照','#d93025',(t,d)=>d.t.insp&&d.t.insp.span]];let lx=exp?W/2-130*k:L,ly=exp?72*k:22*k;ctx.textAlign='left';ctx.font=`${fs*1.05}px ${FONT}`;kinds.forEach(q=>{ctx.fillStyle=q[1];ctx.fillRect(lx,ly-11*k,16*k,12*k);ctx.fillStyle='#3a4a59';ctx.fillText(q[0],lx+24*k,ly);lx+=96*k});
+    ctx.font=`${fs}px ${FONT}`;ctx.textAlign='center';for(let h=t0;h<=t1;h+=2){ctx.strokeStyle='#e8edf2';ctx.beginPath();ctx.moveTo(x(h),T-10*k);ctx.lineTo(x(h),B);ctx.stroke();ctx.fillStyle='#5b6b7a';ctx.fillText(String(h).padStart(2,'0')+':00',x(h),T-16*k)}
+    rows.forEach((d,i)=>{const y=T+i*rh;if(i%2===0){ctx.fillStyle='#f7f9fb';ctx.fillRect(L,y,W-L-R,rh)}ctx.textAlign='right';ctx.fillStyle='#3a4a59';ctx.font=`${fs}px ${FONT}`;ctx.fillText(md(d.d)+' '+WK[new Date(d.d+'T00:00:00Z').getUTCDay()],L-12*k,y+rh/2+fs*.35);
+      kinds.forEach((q,ki)=>{const sp=q[2](d.t[fl],d);if(!sp||sp[0]==null)return;const bh=Math.min(8*k,rh/4.2),by=y+rh/2-bh*1.6+ki*(bh+2*k);ctx.fillStyle=q[1];ctx.globalAlpha=.9;ctx.fillRect(x(sp[0]),by,Math.max(3,x(sp[1])-x(sp[0])),bh);ctx.globalAlpha=1;ctx.beginPath();ctx.arc(x(sp[1]),by+bh/2,bh*.85,0,7);ctx.fill()})});
+    return {hover:(mx,my)=>{const i=Math.floor((my-T)/rh);if(i<0||i>=rows.length||mx<L)return null;const d=rows[i],t=d.t[fl];return `<b>${d.d} ${wk(d.d)}</b><div><span>揀貨</span><span>${hh(t.pick&&t.pick[0])}–${hh(t.pick&&t.pick[1])}</span></div><div><span>上架</span><span>${hh(t.puton&&t.puton[0])}–${hh(t.puton&&t.puton[1])}</span></div><div><span>查照（兩樓）</span><span>${d.t.insp?hh(d.t.insp.span[0])+'–'+hh(d.t.insp.span[1]):'–'}</span></div>`}}}};
+}
+function pOpsWork(){
+  const fl=S.ops.floor==='ALL'?'2F':S.ops.floor;S.ops.floor=fl;const all=DAYS,lab=all.map(d=>md(d.d)),sb=all.map(d=>wk(d.d));
+  const pts=op=>all.map(d=>{const m=metric(d,op,fl);return m?m.points:0}),late=f=>all.map(d=>d.t&&d.t[fl]?f(d.t[fl]):null);
+  return `${ph('作業量與下班時間','每天做了多少、多晚下班')}
+  <div class="tools" style="margin-top:18px">${seg('data-ofl',[['2F','2F'],['3F','3F']],fl)}<span class="sp"></span><span class="chip warn">查照：INSPECTION 沒有的筆數改用 991 CHECKDT 補（副倉據點）</span></div>
+  ${chartCard('strip',stripCfg(fl))}${sec('作業點數與最晚完成時間')}
+  <div class="grid g2">${chartCard('wkPts',{title:fl+' 作業點數',canvasTitle:fl+' 作業點數（依作業別）',labels:lab,sub2:sb,ranges:[7,14,30,60],defRange:14,bars:[{name:'北區出貨',color:'#2563eb',values:pts('north')},{name:'副倉補充',color:'#34a853',values:pts('replenish')},{name:'副倉據點',color:'#f2a900',values:pts('follow')},{name:'進貨上架',color:'#7e57c2',values:pts('puton')}],left:{title:'點數',fmt:v=>fmt(v)}})}
+   ${chartCard('wkLate',{title:fl+' 最晚完成時間',canvasTitle:fl+' 最晚完成時間',sub:'當天最後一筆作業結束；查照為兩樓合計',labels:lab,sub2:sb,ranges:[7,14,30],defRange:14,lines:[{name:'揀貨',color:'#2563eb',values:late(t=>t.pick&&t.pick[1]),fmt:hh},{name:'上架',color:'#7e57c2',values:late(t=>t.puton&&t.puton[1]),fmt:hh},{name:'查照',color:'#d93025',dash:1,values:all.map(d=>d.t&&d.t.insp?d.t.insp.span[1]:null),fmt:hh}],left:{title:'時間',fmt:hh,min:14,max:22,adjMin:1,fixed:0}})}</div>
+  <div style="height:20px"></div>${chartCard('wkIns',{title:'查照筆數（兩樓合計）',canvasTitle:'查照筆數',sub:'紅＝INSPECTION；黃＝INSPECTION 沒有、改用 991 CHECKDT 補的筆數（副倉據點）',sample:0,labels:lab,sub2:sb,ranges:[7,14,30],defRange:14,bars:[{name:'INSPECTION',color:'#d93025',values:all.map(d=>d.t&&d.t.insp?d.t.insp.points:0)},{name:'991 CHECKDT 補',color:'#f2a900',values:all.map(d=>d.t&&d.t.insp?d.t.insp.chkOnly:0)}],left:{title:'筆數',fmt:v=>fmt(v)}})}`;
+}
+function pOpsHit(){
+  const unit=S.ops.hitUnit,recs=D.hit[unit],dates=[...new Set(recs.map(r=>r.d))].sort(),cats=unit==='face'?['指定面','其他面']:['指定貨架','其他貨架'],U=unit==='face'?'面':'貨架';
+  const ser=k=>cats.flatMap((c,ci)=>FL.map(f=>({name:`${c} ${f}`,color:COL[f],dash:ci>0,values:dates.map(d=>{const r=recs.find(x=>x.d===d&&x.floor===f&&x.cat===c);return r?r[k]:null}),fmt:v=>fmt(v,2)})));
+  const cfg=(t,k)=>({title:t,canvasTitle:t+'（'+(unit==='face'?'以面計':'以貨架計')+'）',sub:'實線＝指定'+U+'，虛線＝其他'+U+'；命中率＝點 ÷ 次',labels:dates.map(md),sub2:dates.map(wk),lines:ser(k),left:{title:'命中率',fmt:v=>fmt(v,2),min:.9,max:1.4,adjMin:1}});
+  const rows=recs.slice().sort((a,b)=>a.d<b.d?1:-1).map(r=>[r.d,r.floor,r.cat,r.outRate,r.outVisits,r.outPoints,r.inRate,r.inVisits,r.inPoints]);
+  return `${ph('貨架命中率',`${D.hit.since} 起，資料到 ${D.hit.through}`)}<div class="tools" style="margin-top:18px">${seg('data-hu',[['face','以「面」計'],['rack','以「貨架」計']],unit)}</div>
+  <div class="grid g2">${chartCard('hitOut',cfg('出貨命中率','outRate'))}${chartCard('hitIn',cfg('進貨命中率','inRate'))}</div>
+  ${sec('每日明細')}${dataTable('hitTbl',[{h:'日期',f:r=>r[0]},{h:'樓層',f:r=>r[1]},{h:'類別',f:r=>r[2]},{h:'出貨命中率',n:1,f:r=>fmt(r[3],2)},{h:'出貨次',n:1,f:r=>fmt(r[4])},{h:'出貨點',n:1,f:r=>fmt(r[5])},{h:'進貨命中率',n:1,f:r=>fmt(r[6],2)},{h:'進貨次',n:1,f:r=>fmt(r[7])},{h:'進貨點',n:1,f:r=>fmt(r[8])}],rows)}`;
+}
+function heatCfg(){
+  const HD=D.heatAll.days,hdates=Object.keys(HD).sort(),date=HD[S.ops.heatDate]?S.ops.heatDate:hdates[hdates.length-1],H0=HD[date],H={times:H0.t,container:H0.c,hot:H0.hot},cells=D.heatAll.layout,aisle=new Set(D.heatAll.aisles),cols=[10,61],rr=[2,31],NC=cols[1]-cols[0]+1,NR=rr[1]-rr[0]+1;
+  return {title:'貨架勤後熱點圖（2F＋3F）',canvasTitle:'貨架勤後熱點圖　'+date.replaceAll('-','/'),sub:'顏色＝當日出貨頻度；黑框＝高銷貨架／熱區；小黑點＝鎖定貨架；灰＝走道',valueLabels:false,noData:1,labels:[],
+   extraCtl:seg('data-hd',hdates.slice(-7).reverse().map(d=>[d,md(d)]),date),
+   height:(s,W)=>{const cell=Math.floor((W/2-40)/NC);return 74+NR*cell+64},expHeight:()=>720,
+   draw:(ctx,W,Hh,k,s,exp)=>{const vals=Object.values(H.times).filter(v=>v>0).sort((a,b)=>a-b),cap=vals[Math.floor(vals.length*.97)]||1,cell=Math.floor(Math.min((W/2-40*k)/NC,(Hh-(exp?190:140)*k)/NR)),top=(exp?120:56)*k;
+    if(exp){ctx.textAlign='center';ctx.fillStyle='#17222d';ctx.font=`700 ${22*k}px ${FONT}`;ctx.fillText('貨架勤後熱點圖　'+date.replaceAll('-','/'),W/2,38*k)}
+    const col=v=>{if(!v)return '#eef2f6';const t=Math.min(1,Math.sqrt(v/cap)),a=[255,244,204],b=[245,158,11],c=[185,28,28],m=t<.5?[a,b,t*2]:[b,c,(t-.5)*2];return `rgb(${m[0].map((x,i)=>Math.round(x+(m[1][i]-x)*m[2])).join(',')})`};
+    const hotSet=new Set(H.hot),lockSet=new Set(D.heatAll.locked);
+    FL.forEach((f,fi)=>{const ox=(W/2)*fi+(W/2-NC*cell)/2,oy=top;ctx.fillStyle=COL[f];ctx.font=`700 ${18*k}px ${FONT}`;ctx.textAlign='left';ctx.fillText(f,ox,oy-12*k);
+      cells.filter(c=>c[2]===f).forEach(([x,y,fl,loc,hot])=>{const px=ox+(x-cols[0])*cell,py=oy+(y-rr[0])*cell,v=H.times[loc]||0;ctx.fillStyle=aisle.has(loc)?'#dfe5ea':col(v);ctx.fillRect(px,py,cell-1,cell-1);
+        const cid=H.container[loc];if(hot||(cid&&hotSet.has(cid))){ctx.strokeStyle='#17222d';ctx.lineWidth=1.3;ctx.strokeRect(px+.5,py+.5,cell-2,cell-2)}if(cid&&lockSet.has(cid)){ctx.fillStyle='#17222d';ctx.beginPath();ctx.arc(px+cell/2,py+cell/2,Math.max(1.4,cell/6),0,7);ctx.fill()}})});
+    const gx=W/2-120*k,gy=Hh-34*k;ctx.font=`${15*k}px ${FONT}`;ctx.textAlign='right';ctx.fillStyle='#3a4a59';ctx.fillText('出貨頻度  0',gx-6,gy+13*k);for(let i=0;i<=20;i++){ctx.fillStyle=col(cap*(i/20)*(i/20));ctx.fillRect(gx+i*12*k,gy,12*k,16*k)}ctx.textAlign='left';ctx.fillText(String(cap)+' 次以上',gx+20*12*k+8,gy+13*k);
+    return {hover:(mx,my)=>{const fi=mx>W/2?1:0,f=FL[fi],ox=(W/2)*fi+(W/2-NC*cell)/2,x=Math.floor((mx-ox)/cell)+cols[0],y=Math.floor((my-top)/cell)+rr[0],c=cells.find(q=>q[2]===f&&q[0]===x&&q[1]===y);if(!c)return null;const v=H.times[c[3]];return `<b>${f}　${esc(c[3])}</b>${aisle.has(c[3])?'<div><span>走道</span><span></span></div>':`<div><span>出貨頻度</span><span>${v==null?'0':fmt(v)} 次</span></div>`}${H.container[c[3]]?`<div><span>貨架</span><span>${esc(H.container[c[3]])}</span></div>`:''}`}}}};
+}
+function pOpsHeat(){return `${ph('貨架熱點圖','沿用日報的雙樓層左右排列；每天由「出貨頻度」檔自動產生')}<div style="height:18px"></div>${chartCard('heat',heatCfg())}<p class="note">座標、走道、鎖定貨架取自日報工具；鎖定貨架名單要在那邊更新。</p>`}
+function pOpsInbound(){
+  const I=D.inbound,fl=S.ops.inFloor,rep=I.reportDate,N3=I.olderThan,open=I.openDays;
+  const sum=(arr,f,k)=>arr.reduce((a,r)=>a+(f==='ALL'?r['2F'][k]+r['3F'][k]:r[f][k]),0),old=open.filter(r=>r.d<N3),nw=open.filter(r=>r.d>=N3);
+  const cartsOld=new Set(I.carts.filter(c=>c.oldest<N3).map(c=>c.cart)).size,daily=I.daily.filter(r=>r.d>='2026-08-01'),lastD=daily[daily.length-1];
+  const arrKinds=[['包裝件|開櫃完畢','包裝件・開櫃完畢','#7aa6c2'],['進口件|已到貨','進口件・已到貨','#2563eb'],['進口件|開櫃完畢','進口件・開櫃完畢','#e2a14c'],['包裝件|已到貨','包裝件・已到貨','#8e6bbf']];
+  const fls=fl==='ALL'?['2F','3F','其他']:[fl],arrv=k=>I.arrived.map(r=>fls.reduce((a,f)=>a+(r.counts[k+'|'+f]||0),0));
+  const stat=(t,big,a,b,cls)=>`<div class="card"><div class="card-h"><h3>${t}</h3></div><div class="big" style="margin:0;${cls?'color:var(--bad)':''}">${big}<small>點</small></div><div class="ln" style="margin-top:14px"><span>PCS</span><b>${a}</b></div><div class="ln"><span>${b[0]}</span><b>${b[1]}</b></div></div>`;
+  return `${ph('進貨追蹤',`報表日 ${md(rep)}　所有查詢算到報表當天之前；「3 天」是 3 個工作日（週日不算），和日報同一個切法`)}
+  ${sec('已開箱未上架')}
+  <div class="grid g4">${stat('合計',fmt(sum(open,'ALL','points')),fmt(sum(open,'ALL','pcs')),['台車（不重複）',fmt(I.carts.length)+' 台'])}${stat('超過 3 個工作日（早於 '+md(N3)+'）',fmt(sum(old,'ALL','points')),fmt(sum(old,'ALL','pcs')),['台車',cartsOld+' 台'],1)}${stat('3 個工作日內（'+md(N3)+'～'+md(rep)+'）',fmt(sum(nw,'ALL','points')),fmt(sum(nw,'ALL','pcs')),['2F｜3F',fmt(sum(nw,'2F','points'))+'｜'+fmt(sum(nw,'3F','points'))])}${stat('昨日開箱 → 上架',fmt(lastD.open),fmt(lastD.putaway)+'（上架點）',['當日新增未上架',fmt(lastD.net)+' 點'])}</div>
+  ${sec('趨勢')}
+  <div class="grid g2">${chartCard('inDaily',{title:'每日開箱點數與上架點數',canvasTitle:'每日開箱／上架點數',sub:'折線＝當日新增未上架（開箱 − 上架）',labels:daily.map(r=>md(r.d)),sub2:daily.map(r=>wk(r.d)),ranges:[14,30,60],defRange:30,grouped:true,bars:[{name:'開箱點數',color:'#2f7f9d',values:daily.map(r=>r.open)},{name:'上架點數',color:'#e2a14c',values:daily.map(r=>r.putaway)}],lines:[{name:'當日新增未上架',color:'#a64b52',values:daily.map(r=>r.net),fmt:v=>fmt(v)}],left:{title:'點數',fmt:v=>fmt(v)}})}
+   ${chartCard('inOpen',{title:'未上架點數（依開箱日）',canvasTitle:'已開箱未上架點數（依開箱日）',sub:'2F／3F 堆疊；越舊越要處理',labels:open.map(r=>md(r.d)),sub2:open.map(r=>wk(r.d)),bars:[{name:'2F',color:COL['2F'],values:open.map(r=>r['2F'].points)},{name:'3F',color:COL['3F'],values:open.map(r=>r['3F'].points)}],left:{title:'點數',fmt:v=>fmt(v)},minSlots:8})}
+   ${chartCard('inArr',{title:'到貨未上台車（依現狀態日期）',canvasTitle:'到貨未上台車',sub:'分類 × 狀態堆疊；來源 SQL 沒有限制庫位',labels:I.arrived.map(r=>md(r.d)),sub2:I.arrived.map(r=>wk(r.d)),bars:arrKinds.map(([k,n,c])=>({name:n,color:c,values:arrv(k)})),left:{title:'筆數',fmt:v=>fmt(v)},minSlots:10,extraCtl:seg('data-inf',[['ALL','全部'],['2F','2F'],['3F','3F']],fl)})}</div>
+  ${sec('台車清單','含庫存不足 7 天的點數，可優先上架')}
+  ${dataTable('cartTbl',[{h:'台車',f:r=>pl(r[0])},{h:'樓層',f:r=>r[1]},{h:'未上架點數',n:1,f:r=>fmt(r[2])},{h:'PCS',n:1,f:r=>fmt(r[3])},{h:'最舊開箱日',f:r=>r[4]},{h:'庫存<7天點數',n:1,f:r=>r[5]?`<b style="color:var(--bad)">${r[5]}</b>`:'0'}],I.carts.map(c=>[c.cart,c.floor,c.points,c.pcs,c.oldest,c.low]),{limit:50,extra:{label:'只看超過 3 個工作日',fn:r=>r[4]<N3}})}
+  <p class="note">日報裡的「備註」「優先對應」是人工輸入，網頁版先不放；台車數這裡用不重複台車（${I.carts.length}），日報的加總算法是 444。</p>`;
+}
+function pOpsUtil(){
+  const U=D.util,cats=U.types.map(t=>'類型'+t.type),rate=(t,f)=>t[f].slots?t[f].used/t[f].slots*100:null,vol=(t,f)=>t[f].vol*100;
+  const cfg=(title,fn,sample)=>({title,sample,canvasTitle:title+'（依儲位類型 1～15）',sub:'類型＝儲位大小等級（取自 result_bin_list）；庫存 > 0 才算有放東西',labels:U.types.map(t=>String(t.type)),grouped:true,bars:FL.map(f=>({name:f,color:COL[f],values:U.types.map(t=>fn(t,f)),fmt:v=>fmt(v,1)+'%'})),left:{title:'利用率(%)　橫軸＝儲位類型',fmt:v=>fmt(v)+'%',max:100}});
+  const tr=U.types.map(t=>[t.type,t.dims,t['2F'].slots,t['2F'].used,t['3F'].slots,t['3F'].used,t['2F'].vol,t['3F'].vol]);
+  return `${ph('儲位／貨架／空間利用率','儲位、貨架：WES 庫存 > 0 ÷ 全部；空間：WES Position 的目前庫存體積 ÷ 最大體積')}
+  ${sec('整體')}<div class="grid g2">${FL.map(f=>{const u=U.floors[f];return `<div class="card"><div class="card-h"><h3><span class="pill ${f==='2F'?'f2':'f3'}">${f}</span></h3></div><div class="stat"><div><small>儲位利用率</small><b>${pct(u.used/u.slots)}</b><em>${fmt(u.used)} ／ ${fmt(u.slots)}</em></div><div><small>貨架利用率</small><b>${pct(u.racksUsed/u.racks)}</b><em>${fmt(u.racksUsed)} ／ ${fmt(u.racks)} 座</em></div><div class="w"><small>空間利用率</small><b>${pct(u.volRate)}</b><em>目前庫存體積 ÷ 儲位最大體積</em></div></div></div>`}).join('')}</div>
+  ${sec('依儲位類型 1～15')}
+  <div class="grid g2">${chartCard('utSlot',cfg('儲位利用率',rate,0))}${chartCard('utVol',cfg('空間利用率',vol,0))}</div>
+  ${sec('各類型明細')}${dataTable('utTbl',[{h:'類型',n:1,f:r=>r[0]},{h:'尺寸 深×寬×高(cm)',f:r=>r[1]},{h:'2F 儲位數',n:1,f:r=>fmt(r[2])},{h:'2F 已使用',n:1,f:r=>fmt(r[3])},{h:'2F 利用率',n:1,f:r=>pct(r[2]?r[3]/r[2]:null)},{h:'3F 儲位數',n:1,f:r=>fmt(r[4])},{h:'3F 已使用',n:1,f:r=>fmt(r[5])},{h:'3F 利用率',n:1,f:r=>pct(r[4]?r[5]/r[4]:null)},{h:'2F 空間',n:1,f:r=>pct(r[6])},{h:'3F 空間',n:1,f:r=>pct(r[7])}],tr,{limit:20})}
+  <p class="note">有 ${U.untyped} 個新儲位尚無類型，只計入總數；貨架利用率只做整體（貨架內含多種類型）；依類型的空間利用率，少數尺寸對到多個類型時依儲位數比例分攤。</p>`;
+}
+/* ================= 異常管理看板 ================= */
+const ABN=D.abnormal.rows, ABNC=D.abncell.rows, DIF=D.diff.rows, PCK=D.picking.rows, PUT=D.putDiff.rows;
+function pAbHome(){
+  const parts=f=>new Set(ABN.filter(r=>r[0]===f).map(r=>r[2])).size,qty=f=>ABN.filter(r=>r[0]===f).reduce((a,r)=>a+r[3],0),cases=f=>ABN.filter(r=>r[0]===f).length,od=f=>ABN.filter(r=>r[0]===f&&r[11]>=3).length;
+  const cell=f=>{const x=ABNC.filter(r=>r[0]===f);return {p:new Set(x.map(r=>r[1])).size,s:x.length}},df=f=>{const x=DIF.filter(r=>r[0]===f);return {n:x.length,t:x.filter(r=>r[8]).length}};
+  const pk=f=>PCK.filter(r=>r[0]===f),pu=f=>PUT.filter(r=>r[1]===f);
+  const C=(href,title,right,fn,unit)=>floorCard(href,title,right,fn('2F'),fn('3F'),unit);
+  return `${ph('異常管理看板',`現在還沒處理完的異常，2F／3F 對比　資料更新 ${D.fresh.main}`)}
+  ${sec('目前狀況')}
+  <div class="grid g3">
+   ${C('ab/parts','異常零件','異常區',f=>({big:fmt(parts(f)),lines:[['案件',fmt(cases(f))],['數量',fmt(qty(f))+' pcs']]}),'種')}
+   ${C('ab/cases','異常案件','逾期＝3 個工作日以上',f=>({big:fmt(cases(f)),lines:[['逾期',`<span style="color:var(--bad)">${fmt(od(f))}</span>`],['處理中',fmt(ABN.filter(r=>r[0]===f&&r[5]==='處理中').length)]]}),'件')}
+   ${C('ab/cells','異常儲位','WES',f=>({big:fmt(cell(f).p),lines:[['異常儲位',fmt(cell(f).s)+' 筆'],['數量',fmt(ABNC.filter(r=>r[0]===f).reduce((a,r)=>a+r[3],0))+' pcs']]}),'種零件')}
+   ${C('ab/diff','WES／HOPES 帳差','HOPES − WES − 封箱',f=>({big:fmt(df(f).n),lines:[['未標在途',fmt(df(f).n-df(f).t)],['可能在途',fmt(df(f).t)]]}),'種零件')}
+   ${C('ab/picking','昨日以前揀料中','HOPES 揀貨單',f=>({big:fmt(pk(f).length),lines:[['零件',fmt(new Set(pk(f).map(r=>r[2])).size)+' 種'],['數量',fmt(pk(f).reduce((a,r)=>a+r[4],0))+' pcs']]}),'筆')}
+   ${C('ab/putdiff','上架數量不一致','近 7 天',f=>({big:fmt(pu(f).length),lines:[['台車',fmt(new Set(pu(f).map(r=>r[2])).size)+' 台'],['差異合計',fmt(pu(f).reduce((a,r)=>a+(r[5]-r[4]),0))]]}),'筆')}
+  </div>
+  ${sec('最需要處理','各取前 6 筆；完整清單點進各頁')}
+  <div class="grid g2"><div class="card"><div class="card-h"><h3>逾期最久的異常案件</h3><a href="#/ab/cases">全部案件 ›</a></div>${dataTable('abTop',[{h:'樓層',f:r=>r[0]},{h:'案件',f:r=>r[6]},{h:'件號',f:r=>pl(r[2])},{h:'數量',n:1,f:r=>fmt(r[3])},{h:'工作日',n:1,f:r=>`<b style="color:var(--bad)">${r[11]}</b>`}],ABN.slice().sort((a,b)=>b[11]-a[11]).slice(0,6),{limit:6,bare:1})}</div>
+   <div class="card"><div class="card-h"><h3>帳差最大（沒標可能在途）</h3><a href="#/ab/diff">全部帳差 ›</a></div>${dataTable('dfTop',[{h:'樓層',f:r=>r[0]},{h:'件號',f:r=>pl(r[1])},{h:'品名',f:r=>esc(r[2])},{h:'帳差',n:1,f:r=>`<b>${r[6]>0?'+':''}${fmt(r[6])}</b>`}],DIF.filter(r=>!r[8]&&FL.includes(r[0])).sort((a,b)=>Math.abs(b[6])-Math.abs(a[6])).slice(0,6),{limit:6,bare:1})}</div></div>`;
+}
+function statRow(items){return `<div class="grid g4" style="margin-bottom:20px">${items.map(([t,big,l1,l2,bad])=>`<div class="card"><div class="card-h"><h3>${t}</h3></div><div class="big" style="margin:0;${bad?'color:var(--bad)':''}">${big}</div><div class="ln" style="margin-top:14px"><span>${l1[0]}</span><b>${l1[1]}</b></div><div class="ln"><span>${l2[0]}</span><b>${l2[1]}</b></div></div>`).join('')}</div>`}
+function pAbParts(){
+  const g={};ABN.forEach(r=>{const k=r[0]+'|'+r[2],e=g[k]=g[k]||{f:r[0],p:r[2],q:0,n:0,age:0,layers:new Set()};e.q+=r[3];e.n++;e.age=Math.max(e.age,r[11]);e.layers.add(r[1])});
+  const rows=Object.values(g).map(e=>[e.f,e.p,e.n,e.q,[...e.layers].join('／'),e.age]),L=['上','中','下'];
+  return `${ph('異常零件','異常區裡還有哪些零件，各樓層、各層別多少')}<div style="height:18px"></div>
+  <div class="grid g2">${chartCard('abLayer',{title:'異常區零件數量（依層別）',canvasTitle:'異常區 pcs（依層別）',labels:L.map(l=>l+'層'),grouped:true,bars:FL.map(f=>({name:f,color:COL[f],values:L.map(l=>ABN.filter(r=>r[0]===f&&r[1]===l).reduce((a,r)=>a+r[3],0))})),left:{title:'pcs',fmt:v=>fmt(v)}})}
+   ${chartCard('abLayer2',{title:'異常區零件種數（依層別）',canvasTitle:'異常區 零件種數（依層別）',labels:L.map(l=>l+'層'),grouped:true,bars:FL.map(f=>({name:f,color:COL[f],values:L.map(l=>new Set(ABN.filter(r=>r[0]===f&&r[1]===l).map(r=>r[2])).size)})),left:{title:'種',fmt:v=>fmt(v)}})}</div>
+  ${sec('零件清單')}${dataTable('abPartTbl',[{h:'樓層',f:r=>r[0]},{h:'件號',f:r=>pl(r[1])},{h:'案件數',n:1,f:r=>r[2]},{h:'數量 pcs',n:1,f:r=>fmt(r[3])},{h:'層別',f:r=>r[4]},{h:'最久（工作日）',n:1,f:r=>r[5]}],rows.sort((a,b)=>b[3]-a[3]))}`;
+}
+function pAbCases(){
+  const bucket=r=>r[11]>=3?['逾期','bad']:r[11]>=1?['警示','warn']:['正常','ok'],ages=[...new Set(ABN.map(r=>r[9]))].sort(),n=(f,fn)=>ABN.filter(r=>r[0]===f&&fn(r)).length;
+  return `${ph('異常案件','來源：異常案件現場工具；處理請到「異常案件看板」')}<div style="height:18px"></div>
+  ${statRow(FL.flatMap(f=>[[f+' 待處理',fmt(n(f,r=>r[5]==='待處理')),['處理中',fmt(n(f,r=>r[5]==='處理中'))],['逾期（≥3 工作日）',fmt(n(f,r=>r[11]>=3))],0],[f+' 逾期',fmt(n(f,r=>r[11]>=3)),['警示（1～2 工作日）',fmt(n(f,r=>r[11]>=1&&r[11]<3))],['正常',fmt(n(f,r=>r[11]<1))],1]]))}
+  ${chartCard('abAge',{title:'異常案件件數（依建立日）',canvasTitle:'異常案件件數（依建立日）',sub:'越左邊越久',labels:ages.map(md),bars:FL.map(f=>({name:f,color:COL[f],values:ages.map(d=>ABN.filter(r=>r[9]===d&&r[0]===f).length)})),left:{title:'件數',fmt:v=>fmt(v)},minSlots:10})}
+  ${sec('案件清單')}${dataTable('abCaseTbl',[{h:'狀態',f:r=>{const b=bucket(r);return `<span class="chip ${b[1]}">${b[0]}</span>`}},{h:'樓層',f:r=>r[0]},{h:'層',f:r=>r[1]},{h:'案件編號',f:r=>r[6]},{h:'件號',f:r=>pl(r[2])},{h:'數量',n:1,f:r=>fmt(r[3])},{h:'異常情況',f:r=>r[4]},{h:'階段',f:r=>r[5]},{h:'原台車',f:r=>r[8]},{h:'建立日',f:r=>r[9]},{h:'工作日',n:1,f:r=>r[11]}],ABN.slice().sort((a,b)=>b[11]-a[11]),{limit:100,extra:{label:'只看逾期',fn:r=>r[11]>=3}})}`;
+}
+function pAbCells(){
+  const racks=f=>{const m={};ABNC.filter(r=>r[0]===f).forEach(r=>{const k=r[2].slice(0,9);m[k]=(m[k]||0)+1});return Object.entries(m)},rk=[...racks('2F'),...racks('3F')].sort((a,b)=>b[1]-a[1]).slice(0,15);
+  const x=f=>ABNC.filter(r=>r[0]===f);
+  return `${ph('異常儲位','WES 登記為異常儲位的零件與儲位（一筆＝一個零件在一個儲位，清單有幾列就是幾筆）')}<div style="height:18px"></div>
+  ${statRow(FL.map(f=>[f,fmt(new Set(x(f).map(r=>r[1])).size)+' 種零件',['異常儲位',fmt(x(f).length)+' 筆'],['數量',fmt(x(f).reduce((a,r)=>a+r[3],0))+' pcs']]))}
+  ${chartCard('abCellRack',{title:'異常儲位最多的貨架（前 15）',canvasTitle:'異常儲位最多的貨架（前 15）',labels:rk.map(r=>r[0]),bars:[{name:'異常儲位數',color:'#a64b52',values:rk.map(r=>r[1])}],left:{title:'儲位數',fmt:v=>fmt(v)}})}
+  ${sec('清單')}${dataTable('abCellTbl',[{h:'樓層',f:r=>r[0]},{h:'件號',f:r=>pl(r[1])},{h:'儲位',f:r=>r[2]},{h:'數量',n:1,f:r=>fmt(r[3])}],ABNC,{limit:100})}`;
+}
+function pAbDiff(){
+  const b=[[1,'1'],[2,'2'],[5,'3～5'],[10,'6～10'],[50,'11～50'],[1e9,'>50']],bk=r=>b.findIndex(x=>Math.abs(r[6])<=x[0]),cnt=(f,flag)=>b.map((_,i)=>DIF.filter(r=>r[0]===f&&bk(r)===i&&r[8]===flag).length),x=f=>DIF.filter(r=>r[0]===f);
+  return `${ph('WES／HOPES 帳差','帳差 ＝ HOPES − WES − 封箱；在途仍算帳差，只標「可能在途」　WES 快照 '+D.diff.wesSnapshot.slice(5,16))}<div style="height:18px"></div>
+  ${statRow([...FL,'其他'].map(f=>[f==='其他'?'其他（HOPES 庫位不在 2F／3F）':f,fmt(x(f).length)+' 種',['未標在途',fmt(x(f).filter(r=>!r[8]).length)],['可能在途',fmt(x(f).filter(r=>r[8]).length)]]))}
+  ${chartCard('abDiffDist',{title:'帳差大小分布（零件數）',canvasTitle:'帳差大小分布',sub:'橫軸為絕對差異 pcs；深色＝未標在途，淺色＝可能在途',labels:b.map(q=>q[1]),grouped:true,bars:[{name:'2F 未標在途',color:'#2563eb',values:cnt('2F',0)},{name:'2F 可能在途',color:'#9db8ff',values:cnt('2F',1)},{name:'3F 未標在途',color:'#e8710a',values:cnt('3F',0)},{name:'3F 可能在途',color:'#ffc999',values:cnt('3F',1)}],left:{title:'零件數',fmt:v=>fmt(v)}})}
+  ${sec('帳差清單')}${dataTable('abDiffTbl',[{h:'樓層',f:r=>r[0]},{h:'件號',f:r=>pl(r[1])},{h:'品名',f:r=>esc(r[2])},{h:'HOPES',n:1,f:r=>fmt(r[3])},{h:'WES',n:1,f:r=>fmt(r[4])},{h:'封箱',n:1,f:r=>fmt(r[5])},{h:'帳差',n:1,f:r=>`<b>${r[6]>0?'+':''}${fmt(r[6])}</b>`},{h:'標記',f:r=>r[8]?`<span class="chip warn">可能在途 ${r[7]>0?'+':''}${fmt(r[7])}</span>`:''}],DIF.slice().sort((a,b)=>Math.abs(b[6])-Math.abs(a[6])),{limit:100,rc:r=>r[8]?'tr':'',extra:{label:'只看沒標「可能在途」',fn:r=>!r[8]}})}`;
+}
+function pAbPicking(){
+  const bs=[['昨天',r=>r[7]<=1],['2 天',r=>r[7]===2],['3～7 天',r=>r[7]>=3&&r[7]<=7],['8 天以上',r=>r[7]>7]],x=f=>PCK.filter(r=>r[0]===f);
+  return `${ph('昨日以前揀料中','HOPES 揀貨單狀態＝揀料中（L），建立日在今天之前')}<div style="height:18px"></div>
+  ${statRow(FL.map(f=>[f,fmt(x(f).length)+' 筆',['零件',fmt(new Set(x(f).map(r=>r[2])).size)+' 種'],['數量',fmt(x(f).reduce((a,r)=>a+r[4],0))+' pcs']]))}
+  ${chartCard('abPick',{title:'揀料中筆數（依建立日距今）',canvasTitle:'昨日以前揀料中（依建立日距今）',labels:bs.map(q=>q[0]),grouped:true,bars:FL.map(f=>({name:f,color:COL[f],values:bs.map(q=>PCK.filter(r=>r[0]===f&&q[1](r)).length)})),left:{title:'筆數',fmt:v=>fmt(v)}})}
+  ${sec('清單')}${dataTable('abPickTbl',[{h:'樓層',f:r=>r[0]},{h:'建立日',f:r=>r[1]},{h:'天數',n:1,f:r=>r[7]},{h:'件號',f:r=>pl(r[2])},{h:'數量',n:1,f:r=>fmt(r[4])},{h:'IndexKey',f:r=>r[3]},{h:'路線',f:r=>r[5]},{h:'客戶',f:r=>r[6]}],PCK)}`;
+}
+function pAbPut(){
+  const dates=[...new Set(PUT.map(r=>r[0]))].sort(),x=f=>PUT.filter(r=>r[1]===f);
+  return `${ph('上架數量不一致',`HOPES 已上架數量 vs WES 實際上架數量；只列有差異的台車與零件，比對到 ${D.putDiff.through||'–'}（WES 每日報表隔天才有，共比對 ${fmt(D.putDiff.compared)} 組）`)}<div style="height:18px"></div>${statRow(FL.map(f=>[f,fmt(x(f).length)+' 筆',['台車',fmt(new Set(x(f).map(r=>r[2])).size)+' 台'],['差異合計',fmt(x(f).reduce((a,r)=>a+(r[5]-r[4]),0))]]))}
+  ${chartCard('abPutDay',{title:'不一致筆數（依開箱日）',canvasTitle:'上架數量不一致（依開箱日）',labels:dates.map(md),bars:FL.map(f=>({name:f,color:COL[f],values:dates.map(d=>PUT.filter(r=>r[0]===d&&r[1]===f).length)})),left:{title:'筆數',fmt:v=>fmt(v)},minSlots:7})}
+  ${sec('清單')}${dataTable('abPutTbl',[{h:'開箱日',f:r=>r[0]},{h:'樓層',f:r=>r[1]},{h:'台車',f:r=>pl(r[2])},{h:'件號',f:r=>pl(r[3])},{h:'HOPES 上架',n:1,f:r=>r[4]},{h:'WES 上架',n:1,f:r=>r[5]},{h:'差異',n:1,f:r=>`<b style="color:var(--bad)">${r[5]-r[4]}</b>`}],PUT)}`;
+}
+/* ================= 件號／台車查詢 ================= */
+/* 件號／台車查詢：資料取自原本「零件／台車查詢」的發布檔（同一份、同一個更新週期），再補上看板自己的資料 */
+const LK={act:null,t:0,q:'',data:null,sel:''};
+async function lkActive(force){
+  if(force||!LK.act||Date.now()-LK.t>300000){
+    const r=await fetch('../active.json?t='+Date.now(),{cache:'no-store'});
+    if(!r.ok)throw new Error('零件查詢資料尚未發布');
+    LK.act=await r.json();LK.t=Date.now();
+  }
+  return LK.act;
+}
+async function lkRead(q,retry){
+  const act=await lkActive(retry),norm=q.trim().replace(/^['’]+/,'').replace(/\s+/g,'').toUpperCase();
+  const dg=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(norm)),h=[...new Uint8Array(dg)].map(b=>b.toString(16).padStart(2,'0')).join('');
+  const base='../releases/'+encodeURIComponent(act.version);
+  const gone=()=>{if(!retry)return lkRead(q,true);throw new Error('零件查詢資料正在更新，請稍後再試')};
+  const r1=await fetch(base+'/lookup/'+h.slice(0,2)+'.json',{cache:'force-cache'});
+  if(r1.status===404)return gone();
+  if(!r1.ok)throw new Error('索引讀取失敗（'+r1.status+'）');
+  const id=String((await r1.json())[h]||'');
+  if(!id)return null;
+  const r2=await fetch(base+'/records/'+id.slice(0,2)+'.json',{cache:'force-cache'});
+  if(r2.status===404)return gone();
+  if(!r2.ok)throw new Error('查詢結果讀取失敗（'+r2.status+'）');
+  const d=(await r2.json())[id];
+  if(!d)throw new Error('查詢結果索引不一致，請稍後再試');
+  return d;
+}
+const lkTable=(cols,rows,empty)=>rows.length?`<table class="t"><thead><tr>${cols.map(c=>`<th class="${c[2]?'n':''}" style="cursor:default">${c[0]}</th>`).join('')}</tr></thead><tbody>${rows.map(r=>`<tr>${cols.map(c=>`<td class="${c[2]?'n':''}">${c[1](r)}</td>`).join('')}</tr>`).join('')}</tbody></table>`:`<div class="empty">${empty}</div>`;
+const lkAcc=(title,sub,body,on)=>`<div class="acc ${on?'on':''}"><button onclick="this.parentNode.classList.toggle('on')">${title}<span>${sub}</span></button><div class="ab">${body}</div></div>`;
+const lkKV=rows=>`<table class="t"><tbody>${rows.map(r=>`<tr><td style="color:var(--muted)">${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</tbody></table>`;
+const nz=v=>fmt(Number(String(v==null?0:v).replace(/,/g,''))||0,2).replace(/\.00$/,'');
+const lkWhen=()=>`<div class="note" style="margin-top:0">零件／台車資料：${esc((LK.act&&LK.act.updateStatus&&LK.act.updateStatus.latestDisplay)||'–')}（和原本的查詢頁同一份）</div>`;
+function lkPart(data){
+  const part=data.part||{},vs=part.variants||[];
+  const want=(/^[A-Z][_\d]/.test(LK.q)?LK.q.charAt(0):'');
+  if(!LK.sel||!vs.some(v=>v.productType===LK.sel))LK.sel=(vs.find(v=>v.productType===want)||vs[0]||{}).productType||'';
+  const s=vs.find(v=>v.productType===LK.sel)||vs[0]||part,hp=s.hopes||{},wes=s.wes||{},oc=s.openCase||{},clo=s.clo||{},sus=s.suspense||{},ac=s.abnormalCell||{},pk=s.pickAbnormal||{},ar=s.abnormalArea||{};
+  if(data.found===false||!(part.partNo||s.partNo))return `<div class="card"><div class="empty">原本的零件查詢也查無此件號</div></div>`;
+  const cf=+ar.confirmedQuantity||0,ps=+ar.possibleQuantity||0,arText=!cf&&!ps?'0 pcs':cf&&ps?`${nz(cf)} pcs＋可能 ${nz(ps)}`:cf?nz(cf)+' pcs':'可能 '+nz(ps)+' pcs';
+  const t=(l,v,c)=>`<div class="${c||''}"><small>${l}</small><b>${v}</b></div>`;
+  const sizes=(s.sizes||[]).map(z=>`${(s.sizes.length>1&&z.FRCDPARTNO?z.FRCDPARTNO+'：':'')}${z['深_單']||0} × ${z['寬_單']||0} × ${z['高_單']||0}，${z['重量_單']||0}`).join('；')||'無';
+  return `<div class="hero" style="margin-bottom:6px"><h2>${esc(s.partNo||part.partNo||LK.q)}</h2><span>${esc(s.name||part.name||'')}</span></div>
+  ${vs.length>1?`<div class="seg" style="margin-bottom:14px">${vs.map(v=>`<button data-lkv="${esc(v.productType)}" class="${v.productType===LK.sel?'on':''}">商品別 ${esc(v.productType)}</button>`).join('')}</div>`:`<p class="note" style="margin-top:0">商品別：${esc(s.productType||'查無')}</p>`}
+  <div class="stat">${t('異常區',arText,cf||ps?'w':'')}${t('HOPES OH',nz(hp.oh)+' pcs')}${t('WES OH',nz(wes.oh)+' pcs')}${t('未上架',nz(oc.count)+' 點',+oc.count?'w':'')}${t('剩餘封箱',nz(clo.remaining)+' pcs')}${t('暫存總數',nz(sus.quantity)+' pcs',+sus.quantity?'w':'')}${t('WES 儲位',nz(wes.storageCount)+' 個')}${t('儲位缺',nz(ac.storageCount)+' 個',+ac.storageCount?'r':'')}${t('儲位缺 PCS',nz(ac.quantity)+' pcs',+ac.quantity?'r':'')}${t('倉缺貼紙',nz(pk.labelCount)+' 張',+pk.labelCount?'r':'')}${t('倉缺總數',nz(pk.quantity)+' pcs',+pk.quantity?'r':'')}</div>
+  <div style="height:16px"></div>${lkKV([['HOPES 庫位',esc((hp.locations||[]).join('、')||'無')],['零件尺寸',esc(sizes)]])}
+  ${sec('明細')}<div>
+  ${lkAcc('異常區案件',`${nz(ar.caseCount)} 件、${nz(ar.totalQuantity)} pcs`,lkTable([['樓層／層',d=>esc((d.floor||'未填')+'・'+(d.layer&&d.layer!=='未填'?d.layer+'層':'層別未填'))],['數量',d=>nz(d.quantity),1],['案件編號',d=>esc(d.caseNo||'')],['比對',d=>d.matchType==='possible'?'僅依件號':'商品別一致'],['異常情況',d=>esc(d.situation||'')],['原台車',d=>d.originalCart?pl(d.originalCart):''],['處理階段',d=>esc(d.stage||'')],['最終處理',d=>esc(d.finalResolution||'尚未決定')],['上架狀態',d=>esc(d.shelvingStatus||'')],['最後更新',d=>esc(d.updatedAt||'')]],ar.details||[],'沒有異常區案件'),(ar.details||[]).length)}
+  ${lkAcc('未上架零件',`${nz(oc.count)} 點、${nz(oc.quantity)} pcs`,lkTable([['台車',d=>d.CARTNO?pl(d.CARTNO):''],['數量',d=>nz(d.OPENQTY),1],['庫位',d=>esc(d.LOCATION||'')],['發票號碼',d=>esc(d.INVOICE_NO||'')],['上架序號',d=>esc(d.BIN_SEQNO||'')],['案件序號',d=>esc(d.CASE_SERNO||'')],['最後更新',d=>esc(d.MTDT||'')]],oc.details||[],'沒有未上架資料'),(oc.details||[]).length)}
+  ${lkAcc('暫存',`${nz(sus.count)} 個、${nz(sus.quantity)} pcs`,lkTable([['發貨單號',d=>esc(d['發貨單號']||'')],['暫存日期',d=>esc(d['暫存日期']||'')],['商品別',d=>esc(d['F/C']||'')],['數量',d=>nz(d['數量']),1]],sus.details||[],'沒有暫存資料'),(sus.details||[]).length)}
+  ${lkAcc('儲位缺',`${nz(ac.storageCount)} 個儲位、缺 ${nz(ac.quantity)} pcs`,lkTable([['ObjectId',d=>esc(d.objectId||'')],['筆數',d=>nz(d.count),1],['儲位數',d=>nz(d.storageCount),1],['缺少數量',d=>nz(d.quantity),1],['儲位',d=>esc((d.positions||[]).join('、'))]],ac.groups||[],'沒有儲位缺資料'),(ac.groups||[]).length)}
+  ${lkAcc('倉缺',`${nz(pk.labelCount)} 張、${nz(pk.quantity)} pcs`,lkTable([['索引碼',d=>esc(d.indexKey||'')],['據點',d=>esc(d.strongholdId||'')],['數量',d=>nz(d.quantity),1]],pk.details||[],'沒有倉缺資料'),(pk.details||[]).length)}</div>`;
+}
+function lkCart(data,inDash){
+  const recs=(data.cart&&data.cart.records)||[],f=recs[0]||{};
+  const state=`<div class="card" style="margin-bottom:14px"><b>${esc(f.STATE_SUMMARY||'查無狀態')}</b></div>`+recs.map(i=>lkKV([['目前狀態',esc(i.NOWSTS||'無')],['上架序號',esc(i.BIN_SEQNO||'無')],['主要工作',esc(i.MAINJOB||'無')],['作業項目',esc(i.RCCODE||'無')],['最後更新',esc(i.MTDT||'無')]])).join('');
+  const oc=(data.cart&&data.cart.openCases)||[];
+  return state+(inDash?'':sec('未上架零件',`${oc.length} 點、${nz((data.cart&&data.cart.openCaseQuantity)||0)} pcs`)+lkTable([['件號',d=>pl(d.PART_NO||'')],['數量',d=>nz(d.OPENQTY),1],['庫位',d=>esc(d.LOCATION||'')],['發票號碼',d=>esc(d.INVOICE_NO||'')],['最後更新',d=>esc(d.MTDT||'')]],oc,'沒有未上架資料'));
+}
+function lkFill(q,inDash){
+  const el=$('#lk');if(!el)return;
+  LK.q=q;LK.data=null;
+  lkRead(q).then(d=>{
+    if($('#lk')!==el)return;LK.data=d;
+    el.innerHTML=lkWhen()+(!d?'<div class="card"><div class="empty">原本的零件查詢也查無此資料</div></div>':d.mode==='cart'?lkCart(d,inDash):lkPart(d));
+  }).catch(e=>{if($('#lk')===el)el.innerHTML=`<div class="card"><div class="empty">${esc(e.message||e)}</div></div>`});
+}
+function pSearch(arg){
+  const q=decodeURIComponent(arg||'').trim().toUpperCase();
+  if(!q)return `${ph('件號／台車查詢')}<div class="card" style="margin-top:18px"><div class="empty">在上方輸入件號或台車號（按 / 快速移到搜尋框）<br>例如：${D.samples.slice(0,5).map(p=>`<a href="#/search/${p}">${p}</a>`).join('、')}</div></div>`;
+  const cart=D.inbound.carts.find(c=>c.cart===q);
+  if(cart)return `<div class="hero"><h2>台車 ${esc(q)}</h2><span>${cart.floor}　未上架追蹤取自 991 開箱資料（算到 ${md(D.inbound.reportDate)}）</span><a href="#/search" style="margin-left:auto">清除</a></div>
+   <div id="lk"><div class="note">查詢台車狀態中…</div></div>
+   <div class="stat" style="margin-top:14px"><div class="${cart.oldest<D.inbound.olderThan?'r':''}"><small>未上架點數</small><b>${cart.points}</b></div><div><small>PCS</small><b>${fmt(cart.pcs)}</b></div><div><small>最舊開箱日</small><b>${cart.oldest.slice(5)}</b></div><div class="w"><small>庫存不足 7 天的點</small><b>${cart.low}</b></div></div>
+   ${sec('未上架零件')}${dataTable('cartItems',[{h:'件號',f:r=>pl(r[0])},{h:'發票數量',n:1,f:r=>r[1]},{h:'發票號碼',f:r=>r[2]},{h:'開箱日',f:r=>r[3]},{h:'在庫',n:1,f:r=>r[4]},{h:'庫存天數',n:1,f:r=>r[5]==null?'–':r[5]}],cart.items,{limit:50})}`;
+  const dr=DIF.find(r=>r[1]===q),ab=ABN.filter(r=>r[2]===q),ac=ABNC.filter(r=>r[1]===q),cc=D.inbound.carts.filter(c=>c.items.some(i=>i[0]===q));
+  const tb=(rows)=>rows.length?`<table class="t"><tbody>${rows.join('')}</tbody></table>`:'<div class="empty">沒有</div>';
+  const diffV=dr?dr[6]:null;
+  return `<div class="hero"><h2>${esc(q)}</h2><span></span><a href="#/search" style="margin-left:auto">清除</a></div>
+  <div id="lk"><div class="note">查詢零件資料中…</div></div>
+  ${sec('看板補充','帳差、異常案件、儲位缺、未上架追蹤')}
+  <div class="stat"><div class="${diffV?'r':''}"><small>帳差（HOPES − WES − 封箱）</small><b>${diffV==null?'無':(diffV>0?'+':'')+fmt(diffV)}</b><em>${dr?'HOPES '+fmt(dr[3])+'／WES '+fmt(dr[4])+'／封箱 '+fmt(dr[5])+(dr[8]?'；可能在途':''):'不在帳差清單'}</em></div><div class="${ab.length?'w':''}"><small>異常案件（看板）</small><b>${ab.length} 件</b></div><div class="${ac.length?'r':''}"><small>異常儲位（WESABNCELL）</small><b>${ac.length} 筆</b></div><div><small>未上架台車（991 追蹤）</small><b>${cc.length} 台車</b></div></div>
+  <div style="height:14px"></div><div><div class="acc ${ab.length?'on':''}"><button onclick="this.parentNode.classList.toggle('on')">異常案件 <span>${ab.length}</span></button><div class="ab">${tb(ab.map(r=>`<tr><td>${r[0]}${r[1]}</td><td class="n">${r[3]}</td><td>${r[4]}</td><td>${r[5]}</td><td>${r[6]}</td></tr>`))}</div></div>
+   <div class="acc ${ac.length?'on':''}"><button onclick="this.parentNode.classList.toggle('on')">異常儲位（WES） <span>${ac.length}</span></button><div class="ab">${tb(ac.map(r=>`<tr><td>${r[0]}</td><td>${r[2]}</td><td class="n">${r[3]}</td></tr>`))}</div></div>
+   <div class="acc ${cc.length?'on':''}"><button onclick="this.parentNode.classList.toggle('on')">在哪些台車未上架 <span>${cc.length}</span></button><div class="ab">${tb(cc.map(c=>`<tr><td>${pl(c.cart)}</td><td>${c.floor}</td><td class="n">${c.items.filter(i=>i[0]===q).reduce((a,i)=>a+i[1],0)} pcs</td></tr>`))}</div></div></div>`;
+}
+/* ================= 路由 ================= */
+const NAV={ops:[['home','總覽'],['_','作業'],['workload','作業量與下班時間'],['eff','效率與等待'],['hit','貨架命中率'],['heat','貨架熱點圖'],['_','進貨與儲位'],['inbound','進貨追蹤'],['lt','進貨時間'],['util','儲位／貨架／空間利用率']],
+  ab:[['home','總覽'],['_','異常'],['parts','異常零件'],['cases','異常案件'],['cells','異常儲位'],['_','帳務與進出貨'],['diff','帳差'],['picking','昨日以前揀料中'],['putdiff','上架數量不一致']]};
+const PAGES={ops:{home:pOpsHome,workload:pOpsWork,eff:pOpsEff,hit:pOpsHit,heat:pOpsHeat,inbound:pOpsInbound,lt:pOpsLT,util:pOpsUtil},ab:{home:pAbHome,parts:pAbParts,cases:pAbCases,cells:pAbCells,diff:pAbDiff,picking:pAbPicking,putdiff:pAbPut}};
+const MOUNT={'ops/home':['hN','hR','hF','hP','heat'],'ops/workload':['strip','wkPts','wkLate','wkIns'],'ops/eff':['eff'],'ops/hit':['hitOut','hitIn'],'ops/heat':['heat'],'ops/inbound':['inDaily','inOpen','inArr'],'ops/lt':['ltWeek','ltArr'],'ops/util':['utSlot','utVol'],
+  'ab/parts':['abLayer','abLayer2'],'ab/cases':['abAge'],'ab/cells':['abCellRack'],'ab/diff':['abDiffDist'],'ab/picking':['abPick'],'ab/putdiff':['abPutDay']};
+const KEY=window.DASH_KEY||'';
+const hashPath=()=>{const h=location.hash.slice(1);if(!KEY)return h.replace(/^\//,'')||'ops/home';return h.startsWith(KEY+'/')?h.slice(KEY.length+1)||'ops/home':'ops/home'};
+const hashOf=p=>KEY?'#'+KEY+'/'+p:'#/'+p;
+let PATH=hashPath(),BOARD='ops',CUR='';
+function go(p){PATH=p;try{history.replaceState(null,'',hashOf(p))}catch(e){}route()}
+function route(){
+  const parts=PATH.split('/');let board=parts[0],sub=parts[1];
+  if(board==='search'){sub='search'}else if(!PAGES[board]){board='ops';sub='home'}else{BOARD=board;if(!PAGES[board][sub])sub='home'}
+  const b=board==='search'?BOARD:board;
+  $('#boards').innerHTML=[['ops','營運看板'],['ab','異常管理看板']].map(([k,t])=>`<button data-board="${k}" class="${k===b?'on':''}">${t}</button>`).join('');
+  $('#side').innerHTML=NAV[b].map(x=>x[0]==='_'?`<h4>${x[1]}</h4>`:`<a href="#/${b}/${x[0]}" class="${board!=='search'&&sub===x[0]?'on':''}">${x[1]}${x[2]?`<small>${x[2]}</small>`:''}</a>`).join('');
+  $('#page').innerHTML=board==='search'?pSearch(parts.slice(1).join('/')):PAGES[board][sub]();CUR=board==='search'?'search':board+'/'+sub;
+  (MOUNT[CUR]||[]).forEach(mountChart);if(board==='search'&&parts[1]){const sq=decodeURIComponent(parts.slice(1).join('/')).trim().toUpperCase();lkFill(sq,D.inbound.carts.some(c=>c.cart===sq))}window.scrollTo(0,0);
+}
+/* ================= 事件 ================= */
+document.addEventListener('click',e=>{
+  const a=e.target.closest('a[href^="#/"]');if(a){e.preventDefault();go(a.getAttribute('href').slice(2));return}
+  const lv=e.target.closest('[data-lkv]');if(lv){LK.sel=lv.dataset.lkv;const el=$('#lk');if(el&&LK.data)el.innerHTML=lkWhen()+lkPart(LK.data);return}
+  const bd=e.target.closest('[data-board]');if(bd){go(bd.dataset.board+'/home');return}
+  const ca=e.target.closest('[data-ca]');if(ca){chartAction(ca.dataset.ca,ca.dataset.id);return}
+  const cr=e.target.closest('[data-cr]');if(cr){st(cr.dataset.id).range=+cr.dataset.cr;saveLS();mountChart(cr.dataset.id);return}
+  const ts=e.target.closest('[data-ts]');if(ts){const t=TBL[ts.dataset.id],ci=t.cols[+ts.dataset.ts].i;t.sort=t.sort&&t.sort[0]===ci?[ci,-t.sort[1]]:[ci,1];refreshTable(ts.dataset.id);return}
+  const tm=e.target.closest('[data-tm]');if(tm){TBL[tm.dataset.tm].lim+=300;refreshTable(tm.dataset.tm);return}
+  const tc=e.target.closest('[data-tc]');if(tc){const id=tc.dataset.id;if(tc.dataset.tc==='tsv'){navigator.clipboard.writeText(tableText(id,'\t')).then(()=>toast('表格已複製，可貼到 Excel'),()=>toast('無法存取剪貼簿'))}else{const l=document.createElement('a');l.href=URL.createObjectURL(new Blob(['﻿'+tableText(id,',')],{type:'text/csv'}));l.download=id+'.csv';l.click()}return}
+  const o=e.target.closest('[data-eop],[data-efl],[data-ewf],[data-ofl],[data-hu],[data-hd],[data-inf],[data-ltgs],[data-ltw]');
+  if(o){const d=o.dataset;if(d.eop)S.ops.op=d.eop;if(d.efl)S.ops.floor=d.efl;if(d.ewf)S.ops.wfloor=d.ewf;if(d.ofl)S.ops.floor=d.ofl;if(d.hu)S.ops.hitUnit=d.hu;if(d.hd)S.ops.heatDate=d.hd;if(d.inf)S.ops.inFloor=d.inf;if(d.ltgs)S.ops.ltgs=d.ltgs;if(d.ltw)S.ops.ltw=d.ltw;const y=scrollY;route();scrollTo(0,y)}
+});
+document.addEventListener('input',e=>{
+  const cs=e.target.closest('[data-cs]');if(cs){const id=cs.dataset.id,s=st(id),k=cs.dataset.cs;if(k==='labels'||k==='lineLabels')s[k]=cs.checked;else s[k]=+cs.value;saveLS();const out=cs.parentNode.querySelector('output');if(out)out.textContent=k==='rightMax'?cs.value+'%':CFG[id].left.fmt(+cs.value);paintScreen(id);return}
+  const tq=e.target.closest('[data-tq]');if(tq){const id=tq.dataset.tq;TBL[id].q=tq.value;TBL[id].lim=TBL[id].opt.limit||100;clearTimeout(tq._t);tq._t=setTimeout(()=>refreshTable(id,true),200)}
+});
+document.addEventListener('change',e=>{const te=e.target.closest('[data-te]');if(te){TBL[te.dataset.te].extraOn=te.checked;refreshTable(te.dataset.te)}});
+document.addEventListener('keydown',e=>{if(e.key==='/'&&document.activeElement.tagName!=='INPUT'){e.preventDefault();$('#q').focus()}});
+window.addEventListener('hashchange',()=>{PATH=hashPath();route()});
+let RT;window.addEventListener('resize',()=>{clearTimeout(RT);RT=setTimeout(()=>(MOUNT[CUR]||[]).forEach(paintScreen),160)});
+const ALL=[...new Set([...DIF.map(r=>r[1]),...ABN.map(r=>r[2]),...ABNC.map(r=>r[1]),...D.samples])];
+$('#q').addEventListener('input',e=>{const v=e.target.value.trim().toUpperCase(),s=$('#sugg');if(v.length<3){s.classList.remove('on');return}
+  const hit=[...D.inbound.carts.map(c=>c.cart).filter(c=>c.includes(v)).slice(0,3).map(c=>[c,'台車']),...ALL.filter(p=>p.includes(v)).slice(0,6).map(p=>[p,'件號'])];
+  s.innerHTML=(hit.length?hit:[[v,'查詢']]).map(([p,k])=>`<button data-p="${esc(p)}"><b>${esc(p)}</b><span class="chip">${k}</span></button>`).join('');s.classList.add('on')});
+$('#q').addEventListener('keydown',e=>{if(e.key==='Enter'){const v=e.target.value.trim().toUpperCase();if(v){go('search/'+encodeURIComponent(v));$('#sugg').classList.remove('on')}}});
+$('#sugg').addEventListener('click',e=>{const b=e.target.closest('[data-p]');if(b){go('search/'+encodeURIComponent(b.dataset.p));$('#sugg').classList.remove('on');$('#q').value=b.dataset.p}});
+document.addEventListener('click',e=>{if(!e.target.closest('.search'))$('#sugg').classList.remove('on')});
+$('#freshText').textContent='資料更新 '+D.fresh.main;
+$('#pop').innerHTML='<b>各資料來源更新時間</b><table>'+D.fresh.src.map(s=>`<tr><td>${s[0]}</td><td>${s[1]}</td></tr>`).join('')+'</table>';
+route();
+</script>
+<script>
+(function(){
+  const msg=t=>{document.body.innerHTML='<div style="font:16px/1.7 \'Microsoft JhengHei\',system-ui,sans-serif;max-width:560px;margin:90px auto;padding:0 24px;color:#17222d"><h2 style="margin:0 0 8px">三倉看板</h2><p style="color:#617283">'+t+'</p></div>'};
+  const b64=s=>Uint8Array.from(atob(s.replace(/-/g,'+').replace(/_/g,'/')),c=>c.charCodeAt(0));
+  const APP=document.getElementById('app').textContent;
+  const key=location.hash.slice(1).split('/')[0];
+  window.DASH_KEY=key;
+  if(!key){msg('這個網址缺少金鑰。請向管理者要完整連結（網址最後面有一長串 # 開頭的字）。');return}
+  if(!window.crypto||!crypto.subtle||!window.DecompressionStream){msg('這個瀏覽器太舊，請改用新版 Edge、Chrome 或 Safari。');return}
+  msg('載入資料中…');
+  (async()=>{
+    try{
+      const r=await fetch('data.enc',{cache:'no-cache'});if(!r.ok)throw new Error('資料檔讀取失敗（'+r.status+'）');
+      const buf=new Uint8Array(await r.arrayBuffer());
+      let k;try{k=await crypto.subtle.importKey('raw',b64(key),'AES-GCM',false,['decrypt'])}catch(e){throw new Error('金鑰不正確，或連結被截斷。請向管理者要完整連結。')}
+      let plain;try{plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},k,buf.slice(12))}catch(e){throw new Error('金鑰不正確，或連結被截斷。請向管理者要完整連結。')}
+      const text=await new Response(new Blob([plain]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+      window.DATA=JSON.parse(text);
+    }catch(e){msg(e.message||String(e));return}
+    document.body.innerHTML=window.__BODY;
+    const s=document.createElement('script');s.textContent=APP;document.body.appendChild(s);
+  })();
+})();
+</script></body>
+</html>
